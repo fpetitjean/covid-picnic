@@ -99,7 +99,7 @@
 			'| Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
 			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 			'Imagery &copy; <a href="https://www.mapbox.com/">Mapbox</a>'+
-			'| <a href="https://melbournefriendzone.com/disclaimer.txt" target="_blank">Disclaimer</a>',
+			'| <a href="http://melbournefriendzone.com/disclaimer.txt" target="_blank">Disclaimer</a>',
 		id: 'mapbox/streets-v11',
 		tileSize: 512,
 		zoomOffset: -1
@@ -171,14 +171,14 @@
 	function selectEntry(entry){
 		if(! (entry['display_name'] in friends) ){
 			addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
-			console.log(entry);
+			//console.log(entry);
 			document.getElementById('results').innerHTML = '';
 			refreshFriendsList();
 		}
 	}
 	
 	function displayResults(data){
-		console.log(data);
+		//console.log(data);
 		document.getElementById('results').innerHTML = '';
 		var myResultsDiv = document.getElementById('results');
 		var br     = document.createElement('br');
@@ -212,13 +212,11 @@
 	
 	function lookupAndDraw(){
 		adresse = document.getElementById('address').value;
-		console.log(document.getElementById('search').textContent);
-		document.getElementById('search').textContent = 'loading...';
-		console.log(adresse);
+		/* console.log(document.getElementById('search').textContent);
+		console.log(adresse); */
 		$.getJSON('https://nominatim.openstreetmap.org/search?format=json&limit=3&countrycodes=au&q=' + adresse, function(data) {
 			displayResults(data);
 		  });
-		  document.getElementById('search').textContent = 'Search';
 	}
 </script>
 
