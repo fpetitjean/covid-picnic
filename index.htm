@@ -2,7 +2,7 @@
 <html>
 <head>
 	
-	<title>Covid picnic</title>
+	<title>Let's have a picnic</title>
 
 	<meta charset="utf-8" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
@@ -17,16 +17,37 @@
             width: 100%;
 	    z-index:100;
         }
-	.searchdiv
-    {
-      position:fixed;
-	  top:20px;
-	  left: 70px;
-	  height:30px;
-	  width:180px;
-	  z-index:110;
-	  font-size:10pt;
-    }
+	.searchdiv{
+	      position:fixed;
+		  top:20px;
+		  left: 70px;
+		  height:80px;
+		  width:60%;
+		  z-index:110;
+		  font-size:14pt;
+	    }
+	    #results{
+	      position:fixed;
+			top:100px;
+			left: 70px;
+			/* height:300px;*/ 
+			width:60%;
+			z-index:110;
+			font-size:10pt;
+			background: rgba(255, 255, 255, 0.5);
+		  
+	    }
+	    #results p{
+	    }
+	    
+	#friends{
+	      position:fixed;
+		  bottom:20px;
+		  left: 70px;
+		  width:80%;
+		  z-index:110;
+		  font-size:10pt;
+	    }
     </style>
 
     
@@ -37,6 +58,9 @@
 		<input type="text" id="address" value="Vazy tap ton 'dress batard" onclick="document.getElementById('address').value = ''"/>
 		<button onclick="lookupAndDraw()" id="search">Search</button>
 	</div>
+	<div id="results"></div>
+		
+	<div id="friends"></div>
 	
 </head>
 <body>
@@ -45,16 +69,14 @@
 
 <div id="map"></div>
 <script>
+	friends = []
 	
-
 	$(document).ready(function(){
 	    $('#address').keypress(function(e){
 	      if(e.keyCode==13)
 	      $('#search').click();
 	    });
 	});
-
-
 
 	var mymap = L.map('map').setView([-37.814, 144.96332], 13);
 
@@ -68,11 +90,9 @@
 		zoomOffset: -1
 	}).addTo(mymap);
 
-	/*L.marker([51.5, -0.09]).addTo(mymap)
-		.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();*/
-
 	var popup = L.popup();
 	var myLayerGroup=L.layerGroup([]).addTo(mymap); 
+	var results = [];
 
 	function onMapClick(e) {
 		/*le_cercle = L.circle(e.latlng, {
@@ -112,23 +132,58 @@
 		myLayerGroup.clearLayers();
 	}
 	
-	function addAdress(adresse,jsonData){
+	function storeAddress(entry){
 	
 	
+	}
+	
+	function selectEntry(entry){
+		addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
+		console.log(entry);
+		document.getElementById('results').innerHTML = '';
+		storeAddress(entry);
+	}
+	
+	function displayResults(data){
+		document.getElementById('results').innerHTML = '';
+		var myResultsDiv = document.getElementById('results');
+		var br     = document.createElement('br');
+		
+		i = 0;
+		for(i = 0 ; i<data.length ; i++){
+			let entry = data[i];
+			var span = document.createElement('p');
+			var address = document.createTextNode(entry['display_name']); 
+			span.appendChild(address);
+			
+			
+			var button = document.createElement('button');  
+			var text = document.createTextNode("select"); 
+			button.appendChild(text); 
+			button.addEventListener('click', function() {
+			    selectEntry(entry);
+			}, false);
+			span.appendChild(button);
+			myResultsDiv.appendChild(span);
+			myResultsDiv.appendChild(br);
+		}
 	}
 
 	mymap.on('click', onMapClick);
 	
 	function lookupAndDraw(){
 		adresse = document.getElementById('address').value;
+		console.log(document.getElementById('search').textContent);
+		document.getElementById('search').textContent = 'loading...';
 		console.log(adresse);
-		$.getJSON('http://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + adresse, function(data) {
-			var items = [];
-			console.log(data);
-			lat= data[0]['lat'];
-			lon =data[0]['lon'];
-			addCircle(lat,lon,'pf',adresse);
-			addAdress(adresse,data[0]);
+		$.getJSON('http://nominatim.openstreetmap.org/search?format=json&limit=3&q=' + adresse, function(data) {
+			displayResults(data);
+//~ 			var items = [];
+//~ 			console.log(data);
+//~ 			lat= data[0]['lat'];
+//~ 			lon =data[0]['lon'];
+//~ 			addCircle(lat,lon,'pf',adresse);
+//~ 			addAdress(adresse,data[0]);
 			
 //~ 			$.each(data, function(key, val) {
 //~ 				
@@ -149,6 +204,7 @@
 //~ 			      $('<p>', { html: "No results found" }).appendTo('#results');
 //~ 			    }
 		  });
+		  document.getElementById('search').textContent = 'Search';
 	}
 
 </script>
