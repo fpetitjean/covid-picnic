@@ -11,7 +11,12 @@
 		height: 100%;
 		font-family:Arial;
 	}
-	
+	button{
+		margin-left:5px;
+	}
+	p{
+		padding-left:10px;
+	}
 	#map {
             height: 100%;
             width: 100%;
@@ -30,15 +35,13 @@
 	      position:fixed;
 			top:100px;
 			left: 70px;
-			/* height:300px;*/ 
 			width:60%;
 			z-index:110;
 			font-size:10pt;
-			background: rgba(255, 255, 255, 0.5);
+			background: rgba(255, 255, 255, .8);
 		  
 	    }
-	    #results p{
-	    }
+	    
 	    
 	#friends{
 	      position:fixed;
@@ -47,6 +50,7 @@
 		  width:80%;
 		  z-index:110;
 		  font-size:10pt;
+		  background: rgba(255, 255, 255, 0.8);
 	    }
     </style>
 
@@ -54,8 +58,8 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
 	<div class="searchdiv">
-		<button onclick="removeAllCircles()">Clear</button>
-		<input type="text" id="address" value="Vazy tap ton 'dress batard" onclick="document.getElementById('address').value = ''"/>
+		<button onclick="clearMe()">Clear</button>
+		<input type="text" id="address"/>
 		<button onclick="lookupAndDraw()" id="search">Search</button>
 	</div>
 	<div id="results"></div>
@@ -69,7 +73,7 @@
 
 <div id="map"></div>
 <script>
-	friends = []
+	
 	
 	$(document).ready(function(){
 	    $('#address').keypress(function(e){
@@ -81,7 +85,7 @@
 	var mymap = L.map('map').setView([-37.814, 144.96332], 13);
 
 	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-		maxZoom: 17,
+		maxZoom: 18,
 		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
 			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -92,20 +96,7 @@
 
 	var popup = L.popup();
 	var myLayerGroup=L.layerGroup([]).addTo(mymap); 
-	var results = [];
-
-	function onMapClick(e) {
-		/*le_cercle = L.circle(e.latlng, {
-			radius: 5000,
-			color: 'blue',
-			weight:1,
-			fillColor: '#f03',
-			fillOpacity: 0.2
-			}
-		);
-		myLayerGroup.addLayer(le_cercle);
-		console.log(mymap);*/
-	}
+	var friends = {};
 	
 	function addCircle(lat,lon,id,text){
 		gps = [lat,lon];
@@ -119,35 +110,75 @@
 		);
 		le_cercle.bindPopup(text);
 		myLayerGroup.addLayer(le_cercle);
+		friends[text] = le_cercle;
 		
 		circleMarker = L.circleMarker(gps,{radius:2,weight:2});
 		myLayerGroup.addLayer(circleMarker);
 	}
 	
-	function removeCircle(circle){
+	function removeCircle(layer){
 		mymap.removeLayer(circle);
 	}
 	
-	function removeAllCircles(){
+	function clearMe(){
+		//remove all circles
 		myLayerGroup.clearLayers();
+		friends={};
+		refreshFriendsList();
+		document.getElementById('results').innerHTML = '';
 	}
 	
-	function storeAddress(entry){
+	function refreshFriendsList(){
+		let myFriendsDiv = document.getElementById('friends');
+		myFriendsDiv.innerHTML = '';
+		let br     = document.createElement('br');
+		
+		for (const [addressK, layer] of Object.entries(friends)) {
+			let span = document.createElement('p');
+			let address = document.createTextNode(addressK); 
+			span.appendChild(address);
+			
+			let button = document.createElement('button');  
+			let text = document.createTextNode("remove"); 
+			button.appendChild(text); 
+			button.addEventListener('click', function() {
+			    mymap.removeLayer(layer);
+			    delete friends[addressK]; 
+			    refreshFriendsList();
+			}, false);
+			span.appendChild(button);
+			myFriendsDiv.appendChild(span);
+			myFriendsDiv.appendChild(br);
+		}
+	}
 	
+	function rezoom(){
+		
 	
 	}
 	
 	function selectEntry(entry){
-		addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
-		console.log(entry);
-		document.getElementById('results').innerHTML = '';
-		storeAddress(entry);
+		if(! (entry['display_name'] in friends) ){
+			addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
+			rezoom();
+			console.log(entry);
+			document.getElementById('results').innerHTML = '';
+			refreshFriendsList();
+		}
 	}
 	
 	function displayResults(data){
+		console.log(data);
 		document.getElementById('results').innerHTML = '';
 		var myResultsDiv = document.getElementById('results');
 		var br     = document.createElement('br');
+		
+		if(data.length==0){
+			var span = document.createElement('p');
+			var address = document.createTextNode('No results');
+			span.appendChild(address);
+			myResultsDiv.appendChild(span);
+		}
 		
 		i = 0;
 		for(i = 0 ; i<data.length ; i++){
@@ -168,41 +199,14 @@
 			myResultsDiv.appendChild(br);
 		}
 	}
-
-	mymap.on('click', onMapClick);
 	
 	function lookupAndDraw(){
 		adresse = document.getElementById('address').value;
 		console.log(document.getElementById('search').textContent);
 		document.getElementById('search').textContent = 'loading...';
 		console.log(adresse);
-		$.getJSON('http://nominatim.openstreetmap.org/search?format=json&limit=3&q=' + adresse, function(data) {
+		$.getJSON('http://nominatim.openstreetmap.org/search?format=json&limit=3&countrycodes=au&q=' + adresse, function(data) {
 			displayResults(data);
-//~ 			var items = [];
-//~ 			console.log(data);
-//~ 			lat= data[0]['lat'];
-//~ 			lon =data[0]['lon'];
-//~ 			addCircle(lat,lon,'pf',adresse);
-//~ 			addAdress(adresse,data[0]);
-			
-//~ 			$.each(data, function(key, val) {
-//~ 				
-//~ 			  items.push(
-//~ 			    "<li><a href='#' onclick='chooseAddr(" +
-//~ 			    val.lat + ", " + val.lon + ");return false;'>" + val.display_name +
-//~ 			    '</a></li>'
-//~ 			  );
-//~ 			});
-//~ 			    $('#results').empty();
-//~ 			    if (items.length != 0) {
-//~ 			      $('<p>', { html: "Search results:" }).appendTo('#results');
-//~ 			      $('<ul/>', {
-//~ 				'class': 'my-new-list',
-//~ 				html: items.join('')
-//~ 			      }).appendTo('#results');
-//~ 			    } else {
-//~ 			      $('<p>', { html: "No results found" }).appendTo('#results');
-//~ 			    }
 		  });
 		  document.getElementById('search').textContent = 'Search';
 	}
