@@ -1,0 +1,2 @@
+This is provided for informational purposes only. We are drawing from Open Street Map directory through Nominatim to map addresses to locations. 
+This should be fairly accurate but some street numbers are not mapped precisely and so don't sue us if you end up outside your friend zone!
