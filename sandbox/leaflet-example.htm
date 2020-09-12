@@ -25,7 +25,7 @@
 	var mymap = L.map('mapid').setView([-37.814, 144.96332], 13);
 
 	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-		maxZoom: 11,
+		maxZoom: 13,
 		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
 			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -38,20 +38,30 @@
 		.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();*/
 
 	var popup = L.popup();
+	var les_cercles = [];
+	var myLayerGroup=L.layerGroup(les_cercles).addTo(mymap); 
 
 	function onMapClick(e) {
-	
-		L.circle(e.latlng, {
+		le_cercle = L.circle(e.latlng, {
 		radius: 5000,
 		color: 'blue',
+		weight:1,
 		fillColor: '#f03',
 		fillOpacity: 0.2
-		}).addTo(mymap).bindPopup("I am a circle.");
+		});
+		myLayerGroup.addLayer(le_cercle);
+		/*le_cercle.addTo(mymap);
+		le_cercle.bindPopup("I am a circle.");
 		/*popup
 			.setLatLng(e.latlng)
 			.setContent("You clicked the map at " + e.latlng.toString())
 			.openOn(mymap);*/
 		console.log(mymap);
+		//setTimeout(test_remove, 3000);
+	}
+	
+	function removeCircle(circle){
+		mymap.removeLayer(circle);
 	}
 
 	mymap.on('click', onMapClick);
