@@ -37,21 +37,20 @@
 	/*L.marker([51.5, -0.09]).addTo(mymap)
 		.bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();*/
 
-
-
 	var popup = L.popup();
 
 	function onMapClick(e) {
 	
-		L.circle(e.latlng, 5000, {
+		L.circle(e.latlng, {
+		radius: 5000,
 		color: 'blue',
 		fillColor: '#f03',
 		fillOpacity: 0.2
 		}).addTo(mymap).bindPopup("I am a circle.");
-		popup
+		/*popup
 			.setLatLng(e.latlng)
 			.setContent("You clicked the map at " + e.latlng.toString())
-			.openOn(mymap);
+			.openOn(mymap);*/
 	}
 
 	mymap.on('click', onMapClick);
