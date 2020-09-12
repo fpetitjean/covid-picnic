@@ -44,7 +44,7 @@
 	var myLayerGroup=L.layerGroup([]).addTo(mymap); 
 
 	function onMapClick(e) {
-		le_cercle = L.circle(e.latlng, {
+		/*le_cercle = L.circle(e.latlng, {
 			radius: 5000,
 			color: 'blue',
 			weight:1,
@@ -53,11 +53,12 @@
 			}
 		);
 		myLayerGroup.addLayer(le_cercle);
-		console.log(mymap);
+		console.log(mymap);*/
 	}
 	
-	function addCircle(lat,lon){
-		le_cercle = L.circle([lat,lon], {
+	function addCircle(lat,lon,id,text){
+		gps = [lat,lon];
+		le_cercle = L.circle(gps, {
 			radius: 5000,
 			color: 'blue',
 			weight:1,
@@ -65,7 +66,12 @@
 			fillOpacity: 0.2
 			}
 		);
+		le_cercle.bindPopup(text);
 		myLayerGroup.addLayer(le_cercle);
+		
+		circleMarker = L.circleMarker(gps,{radius:2});
+		myLayerGroup.addLayer(circleMarker);
+		
 	}
 	
 	function removeCircle(circle){
@@ -74,6 +80,11 @@
 	
 	function removeAllCircles(){
 		myLayerGroup.clearLayers();
+	}
+	
+	function addAdress(adresse,jsonData){
+	
+	
 	}
 
 	mymap.on('click', onMapClick);
@@ -86,7 +97,8 @@
 			console.log(data);
 			lat= data[0]['lat'];
 			lon =data[0]['lon'];
-			addCircle(lat,lon);
+			addCircle(lat,lon,'pf',adresse);
+			addAdress(adresse,data[0]);
 			
 //~ 			$.each(data, function(key, val) {
 //~ 				
