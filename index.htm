@@ -2,9 +2,18 @@
 <html>
 <head>
 	
-	<title>Friend Zone</title>
+	<title>Melbourne Friend Zone</title>
 
 	<meta charset="utf-8" />
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-44212575-5"></script>
+	<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+
+	gtag('config', 'UA-44212575-5');
+	</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
     <style>
         html, body{
@@ -212,5 +221,7 @@
 		  document.getElementById('search').textContent = 'Search';
 	}
 </script>
+
+
 </body>
 </html>
