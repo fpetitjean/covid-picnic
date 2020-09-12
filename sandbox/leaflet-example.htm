@@ -69,9 +69,8 @@
 		le_cercle.bindPopup(text);
 		myLayerGroup.addLayer(le_cercle);
 		
-		circleMarker = L.circleMarker(gps,{radius:2});
+		circleMarker = L.circleMarker(gps,{radius:2,weight:2});
 		myLayerGroup.addLayer(circleMarker);
-		
 	}
 	
 	function removeCircle(circle){
