@@ -26,20 +26,19 @@
 	      position:fixed;
 		  top:20px;
 		  left: 70px;
-		  height:80px;
-		  width:60%;
 		  z-index:110;
-		  font-size:14pt;
+		  border-radius: 10px;
+		  background: rgba(255, 255, 255, 0.9);
+		  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+		  padding: 10px;
 	    }
 	    #results{
 	      position:fixed;
-			top:100px;
+			top:150px;
 			left: 70px;
-			width:60%;
 			z-index:110;
-			font-size:10pt;
 			background: rgba(255, 255, 255, .8);
-		  
+			border-radius: 10px;
 	    }
 	#friends{
 	      position:fixed;
@@ -47,18 +46,20 @@
 		  left: 70px;
 		  width:80%;
 		  z-index:110;
-		  font-size:10pt;
 		  background: rgba(255, 255, 255, 0.8);
+		  border-radius: 10px;
 	    }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
 	<div class="searchdiv">
-		<p style="background:rgba(255, 255, 255, 0.8);">Enter your address, once you've got your circle, enter your friends'. You will quickly find your Friend Zone!</p>
-		<button onclick="clearMe()">Clear</button>
-		<input type="text" id="address"/>
-		<button onclick="lookupAndDraw()" id="search">Search</button>
+		<p>Enter your address. Once you've got your circle, enter your friends. You will quickly find your Friend Zone!</p>
+		<p>
+			<input type="text" id="address"/>
+			<button onclick="lookupAndDraw()" id="search">Search</button>
+			<button onclick="clearMe()">Reset</button>
+		</p>
 	</div>
 	<div id="results"></div>
 		
@@ -89,7 +90,7 @@
 			'| Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
 			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 			'Imagery &copy; <a href="https://www.mapbox.com/">Mapbox</a>'+
-			'| <a href="https://melbournefriendzone.s3-ap-southeast-2.amazonaws.com/disclaimer.txt" target="_blank">Disclaimer</a>',
+			'| <a href="https://melbournefriendzone.com/disclaimer.txt" target="_blank">Disclaimer</a>',
 		id: 'mapbox/streets-v11',
 		tileSize: 512,
 		zoomOffset: -1
@@ -210,10 +211,6 @@
 		  });
 		  document.getElementById('search').textContent = 'Search';
 	}
-
 </script>
-
-
-
 </body>
 </html>
