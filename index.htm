@@ -168,6 +168,18 @@
 		  mouseup: function (e) {
 		    mymap.removeEventListener('mousemove');
 		    mymap.dragging.enable();
+		  },
+		  mouseover: function(e){
+		  	la_handle.setStyle({
+		  		color: 'blue',
+		  		fillColor: 'blue'
+		  	});
+		  },
+		  mouseout: function(e){
+		  	la_handle.setStyle({
+		  		color: '#f03',
+		  		fillColor: '#f03'
+		  	});
 		  }
 		});
 		
