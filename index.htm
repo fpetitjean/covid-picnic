@@ -108,7 +108,19 @@
 	var popup = L.popup();
 	var myLayerGroup=L.featureGroup([]).addTo(mymap); 
 	var friends = {};
+
+	var handleDict = {};
+	var handleToCercle = new Map();
+
+
+	var testGrabbing = false;
 	
+	if(testGrabbing){
+		addCircle('-37.84829', '144.98675', 0, 'Test Ma gueule');
+
+		addCircle('-37.89829', '144.98675', 1, 'Test Ma gueule 2');
+	}
+
 	function addCircle(lat,lon,id,text){
 		gps = [lat,lon];
 		le_cercle = L.circle(gps, {
@@ -122,19 +134,66 @@
 		le_cercle.bindPopup(text);
 		myLayerGroup.addLayer(le_cercle);
 		friends[text] = le_cercle;
+
+		// Handle pour manipuler le cercle
+		var la_handle = L.circle(gps, {
+			radius: 50,
+			color: '#f03',
+			weight:1,
+			fillColor: '#f03',
+			fillOpacity: 1
+			}
+		);
+		myLayerGroup.addLayer(la_handle);
+		handleDict[text] = la_handle;
+		handleToCercle.set(la_handle, le_cercle);
+
+		la_handle.on({
+		  mousedown: function (e) {
+		  	mymap.dragging.disable();
+		    mymap.on('mousemove', function(e) {
+	      		la_handle.setLatLng(e.latlng);
+	      		handleToCercle.get(la_handle).setLatLng(e.latlng);
+				
+		      //handleToCercle[]
+		    });
+		  },
+		  mouseup: function (e) {
+		    mymap.removeEventListener('mousemove');
+		    mymap.dragging.enable();
+		  }
+		});
 		
 		/* circleMarker = L.circleMarker(gps,{radius:2,weight:2});
 		myLayerGroup.addLayer(circleMarker); */
 	}
 	
+
+	// To Delete?
 	function removeCircle(layer){
 		mymap.removeLayer(circle);
+	}
+
+	function removeHandle(layer){
+		var handleFound = null;
+		// On itere sur la Map des handle pour trouver celle qui correspond au cerle
+		for (let [key, value] of handleToCercle) {
+			if(layer == value){
+				handleFound = key;
+			}
+		}
+
+		if(handleFound != null){
+			myLayerGroup.removeLayer(handleFound);
+			handleToCercle.delete(handleFound);
+		}
 	}
 	
 	function clearMe(){
 		//remove all circles
 		myLayerGroup.clearLayers();
 		friends={};
+		handleDict = {};
 		refreshFriendsList();
 		document.getElementById('results').innerHTML = '';
 	}
@@ -154,6 +213,7 @@
 			button.appendChild(text); 
 			button.addEventListener('click', function() {
 			    myLayerGroup.removeLayer(layer);
+			    removeHandle(layer);
 			    delete friends[addressK]; 
 			    refreshFriendsList();
 			}, false);
@@ -165,7 +225,9 @@
 	}
 	
 	function rezoom(){
-		mymap.fitBounds(myLayerGroup.getBounds());
+		if(myLayerGroup.getLayers().length > 0){
+			mymap.fitBounds(myLayerGroup.getBounds());
+		}
 	}
 	
 	function selectEntry(entry){
