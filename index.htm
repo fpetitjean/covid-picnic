@@ -114,12 +114,9 @@
 	var handleToCercle = new Map();
 
 
-	var testGrabbing = false;
-	
-	if(testGrabbing){
-		addCircle('-37.84829', '144.98675', 0, 'Test Ma gueule');
-		addCircle('-37.89829', '144.98675', 1, 'Test Ma gueule 2');
-	}
+	// popup to explain how to move the circle
+	var firstCircle = true;
+	var popupExp = null;
 
 	function addCircle(lat,lon,id,text){
 		let circleColor = palette[Object.keys(friends).length%palette.length];
@@ -147,11 +144,19 @@
 			}
 		);
 		myLayerGroup.addLayer(la_handle);
+
+		if(firstCircle){
+			placeFirstPopup(gps);
+			firstCircle = false;
+		}
+
+
 		handleDict[text] = la_handle;
 		handleToCercle.set(la_handle, le_cercle);
 
 		la_handle.on({
 		  mousedown: function (e) {
+		  	mymap.closePopup();
 		  	mymap.dragging.disable();
 		    mymap.on('mousemove', function(e) {
 	      		la_handle.setLatLng(e.latlng);
@@ -170,6 +175,17 @@
 		myLayerGroup.addLayer(circleMarker); */
 	}
 	
+	function placeFirstPopup(gps){
+		var screenPos = L.point(mymap.project(gps, mymap.getZoom()));
+		var popupScreenPos = screenPos.subtract(L.point(0, 10));
+		var popupPos = mymap.unproject(popupScreenPos, mymap.getZoom());
+
+		popupExp = L.popup()
+	    .setLatLng(popupPos)
+	    .setContent("Move me to adjust the position of the zone!")
+	    .openOn(mymap);
+	}
+
 
 	// To Delete?
 	function removeCircle(layer){
