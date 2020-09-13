@@ -1,318 +1,318 @@
 <!DOCTYPE html>
 <html>
-<head>
-	
-	<title>Melbourne Friend Zone</title>
+  <head>
 
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, user-scalable=no" /> 
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-44212575-5"></script>
-	<script>
-	window.dataLayer = window.dataLayer || [];
-	function gtag(){dataLayer.push(arguments);}
-	gtag('js', new Date());
+    <title>Melbourne Friend Zone</title>
 
-	gtag('config', 'UA-44212575-5');
-	</script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" /> 
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-44212575-5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+
+gtag('config', 'UA-44212575-5');
+    </script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
     <style>
-        html, body{
-		height: 100%;
-		font-family:Arial;
-	}
-	button{
-		margin-left:5px;
-	}
-	p{
-		padding-left:10px;
-	}
-	#map {
-            height: 99%;
-            width: 100%;
-	    z-index:100;
-        }
-	.searchdiv{
-	      position:fixed;
-		  top:20px;
-		  left: 70px;
-		  z-index:110;
-		  border-radius: 10px;
-		  background: rgba(255, 255, 255, 0.9);
-		  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
-		  padding: 10px;
-	    }
-	    #results{
-	      position:fixed;
-			top:150px;
-			left: 70px;
-			z-index:110;
-			background: rgba(255, 255, 255, .8);
-			border-radius: 10px;
-	    }
-	#friends{
-	      position:fixed;
-		  bottom:20px;
-		  left: 70px;
-		  width:80%;
-		  z-index:110;
-		  background: rgba(255, 255, 255, 0.8);
-		  border-radius: 10px;
-	    }
+html, body{
+  height: 100%;
+  font-family:Arial;
+}
+  button{
+    margin-left:5px;
+  }
+  p{
+    padding-left:10px;
+  }
+  #map {
+    height: 99%;
+    width: 100%;
+    z-index:100;
+  }
+  .searchdiv{
+    position:fixed;
+    top:20px;
+    left: 70px;
+    z-index:110;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+    padding: 10px;
+  }
+  #results{
+    position:fixed;
+    top:150px;
+    left: 70px;
+    z-index:110;
+    background: rgba(255, 255, 255, .8);
+    border-radius: 10px;
+  }
+  #friends{
+    position:fixed;
+    bottom:20px;
+    left: 70px;
+    width:80%;
+    z-index:110;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+  }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
-	<div class="searchdiv">
-		<p>Enter your address. Once you've got your circle, enter your friends. You will quickly find your Friend Zone!</p>
-		<p>
-			<input type="text" id="address"/>
-			<button onclick="lookupAndDraw()" id="search">Search</button>
-			<button onclick="clearMe()">Reset</button>
-		</p>
-	</div>
-	<div id="results"></div>
-		
-	<div id="friends"></div>
-	
-</head>
-<body>
+    <div class="searchdiv">
+      <p>Enter your address. Once you've got your circle, enter your friends. You will quickly find your Friend Zone!</p>
+      <p>
+      <input type="text" id="address"/>
+      <button onclick="lookupAndDraw()" id="search">Search</button>
+      <button onclick="clearMe()">Reset</button>
+      </p>
+    </div>
+    <div id="results"></div>
 
-<div id="map"></div>
-<script>
-	
-	
-	$(document).ready(function(){
-	    $('#address').keypress(function(e){
-	      if(e.keyCode==13)
-	      $('#search').click();
-	    });
-	});
+    <div id="friends"></div>
 
-	var mymap = L.map('map').setView([-37.814, 144.96332], 13);
+  </head>
+  <body>
 
-	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-		maxZoom: 18,
-		attribution: 
-			'Dev <a href="https://twitter.com/ArnaudProuzeau" target="_blank">Arnaud</a>, '+
-			'<a href="https://twitter.com/LeDataMiner" target="_blank">Fran&ccedil;ois</a> and '+
-			'<a href="https://github.com/HerrmannM/" target="_blank">Matthieu</a> '+
-			'| Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
-			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-			'Imagery &copy; <a href="https://www.mapbox.com/">Mapbox</a>'+
-			'| <a href="http://melbournefriendzone.com/disclaimer.txt" target="_blank">Disclaimer</a>',
-		id: 'mapbox/streets-v11',
-		tileSize: 512,
-		zoomOffset: -1
-	}).addTo(mymap);
-
-	var popup = L.popup();
-	var myLayerGroup=L.featureGroup([]).addTo(mymap); 
-	var friends = {};
-	var palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0'];
-
-	var handleDict = {};
-	var handleToCercle = new Map();
+    <div id="map"></div>
+    <script>
 
 
-	// popup to explain how to move the circle
-	var firstCircle = true;
-	var popupExp = null;
+      $(document).ready(function(){
+        $('#address').keypress(function(e){
+          if(e.keyCode==13)
+            $('#search').click();
+        });
+      });
 
-	function addCircle(lat,lon,id,text){
-		let circleColor = palette[Object.keys(friends).length%palette.length];
-		console.log(circleColor);
-		gps = [lat,lon];
-		le_cercle = L.circle(gps, {
-			radius: 5000,
-			color: 'blue',
-			weight:1,
-			fillColor: circleColor,
-			fillOpacity: 0.4
-			}
-		);
-		le_cercle.bindPopup(text);
-		myLayerGroup.addLayer(le_cercle);
-		friends[text] = le_cercle;
+var mymap = L.map('map').setView([-37.814, 144.96332], 13);
 
-		// Handle pour manipuler le cercle
-		var la_handle = L.circle(gps, {
-			radius: 50,
-			color: '#f03',
-			weight:1,
-			fillColor: '#f03',
-			fillOpacity: 1
-			}
-		);
-		myLayerGroup.addLayer(la_handle);
+L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+  maxZoom: 18,
+  attribution: 
+  'Dev <a href="https://twitter.com/ArnaudProuzeau" target="_blank">Arnaud</a>, '+
+  '<a href="https://twitter.com/LeDataMiner" target="_blank">Fran&ccedil;ois</a> and '+
+  '<a href="https://github.com/HerrmannM/" target="_blank">Matthieu</a> '+
+  '| Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+  '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+  'Imagery &copy; <a href="https://www.mapbox.com/">Mapbox</a>'+
+  '| <a href="http://melbournefriendzone.com/disclaimer.txt" target="_blank">Disclaimer</a>',
+  id: 'mapbox/streets-v11',
+  tileSize: 512,
+  zoomOffset: -1
+}).addTo(mymap);
 
-		if(firstCircle){
-			placeFirstPopup(gps);
-			firstCircle = false;
-		}
+var popup = L.popup();
+var myLayerGroup=L.featureGroup([]).addTo(mymap); 
+var friends = {};
+var palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0'];
+
+var handleDict = {};
+var handleToCercle = new Map();
 
 
-		handleDict[text] = la_handle;
-		handleToCercle.set(la_handle, le_cercle);
+// popup to explain how to move the circle
+var firstCircle = true;
+var popupExp = null;
 
-		la_handle.on({
-		  mousedown: function (e) {
-		  	mymap.closePopup();
-		  	mymap.dragging.disable();
-		    mymap.on('mousemove', function(e) {
-	      		la_handle.setLatLng(e.latlng);
-	      		handleToCercle.get(la_handle).setLatLng(e.latlng);
-				
-		      //handleToCercle[]
-		    });
-		  },
-		  mouseup: function (e) {
-		    mymap.removeEventListener('mousemove');
-		    mymap.dragging.enable();
-		  },
-		  mouseover: function(e){
-		  	la_handle.setStyle({
-		  		color: 'blue',
-		  		fillColor: 'blue'
-		  	});
-		  },
-		  mouseout: function(e){
-		  	la_handle.setStyle({
-		  		color: '#f03',
-		  		fillColor: '#f03'
-		  	});
-		  }
-		});
-		
-		/* circleMarker = L.circleMarker(gps,{radius:2,weight:2});
-		myLayerGroup.addLayer(circleMarker); */
-	}
-	
-	function placeFirstPopup(gps){
-		var screenPos = L.point(mymap.project(gps, mymap.getZoom()));
-		var popupScreenPos = screenPos.subtract(L.point(0, 10));
-		var popupPos = mymap.unproject(popupScreenPos, mymap.getZoom());
+function addCircle(lat,lon,id,text){
+  let circleColor = palette[Object.keys(friends).length%palette.length];
+  console.log(circleColor);
+  gps = [lat,lon];
+  le_cercle = L.circle(gps, {
+    radius: 5000,
+    color: 'blue',
+    weight:1,
+    fillColor: circleColor,
+    fillOpacity: 0.4
+  }
+  );
+  le_cercle.bindPopup(text);
+  myLayerGroup.addLayer(le_cercle);
+  friends[text] = le_cercle;
 
-		popupExp = L.popup()
-	    .setLatLng(popupPos)
-	    .setContent("Move me to adjust the position of the zone!")
-	    .openOn(mymap);
-	}
+  // Handle pour manipuler le cercle
+  var la_handle = L.circle(gps, {
+    radius: 50,
+    color: '#f03',
+    weight:1,
+    fillColor: '#f03',
+    fillOpacity: 1
+  }
+  );
+  myLayerGroup.addLayer(la_handle);
+
+  if(firstCircle){
+    placeFirstPopup(gps);
+    firstCircle = false;
+  }
 
 
-	// To Delete?
-	function removeCircle(layer){
-		mymap.removeLayer(circle);
-	}
+  handleDict[text] = la_handle;
+  handleToCercle.set(la_handle, le_cercle);
 
-	function removeHandle(layer){
-		var handleFound = null;
-		// On itere sur la Map des handle pour trouver celle qui correspond au cerle
-		for (let [key, value] of handleToCercle) {
-			if(layer == value){
-				handleFound = key;
-			}
-		}
+  la_handle.on({
+    mousedown: function (e) {
+      mymap.closePopup();
+      mymap.dragging.disable();
+      mymap.on('mousemove', function(e) {
+        la_handle.setLatLng(e.latlng);
+        handleToCercle.get(la_handle).setLatLng(e.latlng);
 
-		if(handleFound != null){
-			myLayerGroup.removeLayer(handleFound);
-			handleToCercle.delete(handleFound);
-		}
-	}
-	
-	function clearMe(){
-		//remove all circles
-		myLayerGroup.clearLayers();
-		friends={};
-		handleDict = {};
-		refreshFriendsList();
-		document.getElementById('results').innerHTML = '';
-	}
-	
-	function refreshFriendsList(){
-		let myFriendsDiv = document.getElementById('friends');
-		myFriendsDiv.innerHTML = '';
-		let br     = document.createElement('br');
-		
-		for (const [addressK, layer] of Object.entries(friends)) {
-			let span = document.createElement('p');
-			let address = document.createTextNode(addressK); 
-			span.appendChild(address);
-			
-			let button = document.createElement('button');  
-			let text = document.createTextNode("remove"); 
-			button.appendChild(text); 
-			button.addEventListener('click', function() {
-			    myLayerGroup.removeLayer(layer);
-			    removeHandle(layer);
-			    delete friends[addressK]; 
-			    refreshFriendsList();
-			}, false);
-			span.appendChild(button);
-			myFriendsDiv.appendChild(span);
-			myFriendsDiv.appendChild(br);
-		}
-		rezoom();
-	}
-	
-	function rezoom(){
-		if(myLayerGroup.getLayers().length > 0){
-			mymap.fitBounds(myLayerGroup.getBounds());
-		}
-	}
-	
-	function selectEntry(entry){
-		if(! (entry['display_name'] in friends) ){
-			addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
-			//console.log(entry);
-			document.getElementById('results').innerHTML = '';
-			refreshFriendsList();
-		}
-	}
-	
-	function displayResults(data){
-		//console.log(data);
-		document.getElementById('results').innerHTML = '';
-		var myResultsDiv = document.getElementById('results');
-		var br     = document.createElement('br');
-		
-		if(data.length==0){
-			var span = document.createElement('p');
-			var address = document.createTextNode('No results');
-			span.appendChild(address);
-			myResultsDiv.appendChild(span);
-		}
-		
-		i = 0;
-		for(i = 0 ; i<data.length ; i++){
-			let entry = data[i];
-			var span = document.createElement('p');
-			var address = document.createTextNode(entry['display_name']); 
-			span.appendChild(address);
-			
-			
-			var button = document.createElement('button');  
-			var text = document.createTextNode("select"); 
-			button.appendChild(text); 
-			button.addEventListener('click', function() {
-			    selectEntry(entry);
-			}, false);
-			span.appendChild(button);
-			myResultsDiv.appendChild(span);
-			myResultsDiv.appendChild(br);
-		}
-	}
-	
-	function lookupAndDraw(){
-		adresse = document.getElementById('address').value;
-		/* console.log(document.getElementById('search').textContent);
-		console.log(adresse); */
-		$.getJSON('https://nominatim.openstreetmap.org/search?format=json&limit=3&countrycodes=au&q=' + adresse, function(data) {
-			displayResults(data);
-		  });
-	}
-</script>
+        //handleToCercle[]
+      });
+    },
+    mouseup: function (e) {
+      mymap.removeEventListener('mousemove');
+      mymap.dragging.enable();
+    },
+    mouseover: function(e){
+      la_handle.setStyle({
+        color: 'blue',
+        fillColor: 'blue'
+      });
+    },
+    mouseout: function(e){
+      la_handle.setStyle({
+        color: '#f03',
+        fillColor: '#f03'
+      });
+    }
+  });
+
+  /* circleMarker = L.circleMarker(gps,{radius:2,weight:2});
+    myLayerGroup.addLayer(circleMarker); */
+}
+
+function placeFirstPopup(gps){
+  var screenPos = L.point(mymap.project(gps, mymap.getZoom()));
+  var popupScreenPos = screenPos.subtract(L.point(0, 10));
+  var popupPos = mymap.unproject(popupScreenPos, mymap.getZoom());
+
+  popupExp = L.popup()
+    .setLatLng(popupPos)
+    .setContent("Move me to adjust the position of the zone!")
+    .openOn(mymap);
+}
 
 
-</body>
+// To Delete?
+function removeCircle(layer){
+  mymap.removeLayer(circle);
+}
+
+function removeHandle(layer){
+  var handleFound = null;
+  // On itere sur la Map des handle pour trouver celle qui correspond au cerle
+  for (let [key, value] of handleToCercle) {
+    if(layer == value){
+      handleFound = key;
+    }
+  }
+
+  if(handleFound != null){
+    myLayerGroup.removeLayer(handleFound);
+    handleToCercle.delete(handleFound);
+  }
+}
+
+function clearMe(){
+  //remove all circles
+  myLayerGroup.clearLayers();
+  friends={};
+  handleDict = {};
+  refreshFriendsList();
+  document.getElementById('results').innerHTML = '';
+}
+
+function refreshFriendsList(){
+  let myFriendsDiv = document.getElementById('friends');
+  myFriendsDiv.innerHTML = '';
+  let br     = document.createElement('br');
+
+  for (const [addressK, layer] of Object.entries(friends)) {
+    let span = document.createElement('p');
+    let address = document.createTextNode(addressK); 
+    span.appendChild(address);
+
+    let button = document.createElement('button');  
+    let text = document.createTextNode("remove"); 
+    button.appendChild(text); 
+    button.addEventListener('click', function() {
+      myLayerGroup.removeLayer(layer);
+      removeHandle(layer);
+      delete friends[addressK]; 
+      refreshFriendsList();
+    }, false);
+    span.appendChild(button);
+    myFriendsDiv.appendChild(span);
+    myFriendsDiv.appendChild(br);
+  }
+  rezoom();
+}
+
+function rezoom(){
+  if(myLayerGroup.getLayers().length > 0){
+    mymap.fitBounds(myLayerGroup.getBounds());
+  }
+}
+
+function selectEntry(entry){
+  if(! (entry['display_name'] in friends) ){
+    addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
+    //console.log(entry);
+    document.getElementById('results').innerHTML = '';
+    refreshFriendsList();
+  }
+}
+
+function displayResults(data){
+  //console.log(data);
+  document.getElementById('results').innerHTML = '';
+  var myResultsDiv = document.getElementById('results');
+  var br     = document.createElement('br');
+
+  if(data.length==0){
+    var span = document.createElement('p');
+    var address = document.createTextNode('No results');
+    span.appendChild(address);
+    myResultsDiv.appendChild(span);
+  }
+
+  i = 0;
+  for(i = 0 ; i<data.length ; i++){
+    let entry = data[i];
+    var span = document.createElement('p');
+    var address = document.createTextNode(entry['display_name']); 
+    span.appendChild(address);
+
+
+    var button = document.createElement('button');  
+    var text = document.createTextNode("select"); 
+    button.appendChild(text); 
+    button.addEventListener('click', function() {
+      selectEntry(entry);
+    }, false);
+    span.appendChild(button);
+    myResultsDiv.appendChild(span);
+    myResultsDiv.appendChild(br);
+  }
+}
+
+function lookupAndDraw(){
+  adresse = document.getElementById('address').value;
+  /* console.log(document.getElementById('search').textContent);
+    console.log(adresse); */
+  $.getJSON('https://nominatim.openstreetmap.org/search?format=json&limit=3&countrycodes=au&q=' + adresse, function(data) {
+    displayResults(data);
+  });
+}
+    </script>
+
+
+  </body>
 </html>
