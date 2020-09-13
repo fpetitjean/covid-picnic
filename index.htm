@@ -108,15 +108,18 @@
 	var popup = L.popup();
 	var myLayerGroup=L.featureGroup([]).addTo(mymap); 
 	var friends = {};
+	var palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0'];
 	
 	function addCircle(lat,lon,id,text){
+		let circleColor = palette[Object.keys(friends).length%palette.length];
+		console.log(circleColor);
 		gps = [lat,lon];
 		le_cercle = L.circle(gps, {
 			radius: 5000,
 			color: 'blue',
 			weight:1,
-			fillColor: '#f03',
-			fillOpacity: 0.2
+			fillColor: circleColor,
+			fillOpacity: 0.4
 			}
 		);
 		le_cercle.bindPopup(text);
