@@ -113,14 +113,6 @@
 	var handleDict = {};
 	var handleToCercle = new Map();
 
-
-	var testGrabbing = false;
-	
-	if(testGrabbing){
-		addCircle('-37.84829', '144.98675', 0, 'Test Ma gueule');
-		addCircle('-37.89829', '144.98675', 1, 'Test Ma gueule 2');
-	}
-
 	function addCircle(lat,lon,id,text){
 		let circleColor = palette[Object.keys(friends).length%palette.length];
 		console.log(circleColor);
