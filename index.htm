@@ -113,6 +113,14 @@
 	var handleDict = {};
 	var handleToCercle = new Map();
 
+<<<<<<< HEAD
+=======
+
+	// popup to explain how to move the circle
+	var firstCircle = true;
+	var popupExp = null;
+
+>>>>>>> 4735a4a1af78e9725b323907ff69f0f9d64805e4
 	function addCircle(lat,lon,id,text){
 		let circleColor = palette[Object.keys(friends).length%palette.length];
 		console.log(circleColor);
@@ -139,11 +147,19 @@
 			}
 		);
 		myLayerGroup.addLayer(la_handle);
+
+		if(firstCircle){
+			placeFirstPopup(gps);
+			firstCircle = false;
+		}
+
+
 		handleDict[text] = la_handle;
 		handleToCercle.set(la_handle, le_cercle);
 
 		la_handle.on({
 		  mousedown: function (e) {
+		  	mymap.closePopup();
 		  	mymap.dragging.disable();
 		    mymap.on('mousemove', function(e) {
 	      		la_handle.setLatLng(e.latlng);
@@ -155,6 +171,18 @@
 		  mouseup: function (e) {
 		    mymap.removeEventListener('mousemove');
 		    mymap.dragging.enable();
+		  },
+		  mouseover: function(e){
+		  	la_handle.setStyle({
+		  		color: 'blue',
+		  		fillColor: 'blue'
+		  	});
+		  },
+		  mouseout: function(e){
+		  	la_handle.setStyle({
+		  		color: '#f03',
+		  		fillColor: '#f03'
+		  	});
 		  }
 		});
 		
@@ -162,6 +190,17 @@
 		myLayerGroup.addLayer(circleMarker); */
 	}
 	
+	function placeFirstPopup(gps){
+		var screenPos = L.point(mymap.project(gps, mymap.getZoom()));
+		var popupScreenPos = screenPos.subtract(L.point(0, 10));
+		var popupPos = mymap.unproject(popupScreenPos, mymap.getZoom());
+
+		popupExp = L.popup()
+	    .setLatLng(popupPos)
+	    .setContent("Move me to adjust the position of the zone!")
+	    .openOn(mymap);
+	}
+
 
 	// To Delete?
 	function removeCircle(layer){
