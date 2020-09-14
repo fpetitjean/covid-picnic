@@ -1,4 +1,4 @@
-﻿Id,Amenity,lon,lat,features__properties__barbecue,features__properties__covered,features__properties__fuel,features__properties__tourism,features__properties__source,features__properties__fee,features__properties__designation,features__properties__access,features__properties__burners,features__properties__fixme,features__properties__note,features__properties__description,features__properties__source:leisure,features__properties__name,features__properties__bin,features__properties__addr:postcode,features__properties__addr:suburb,features__properties__source:geometry,features__properties__ele,features__properties__ele:msl,features__properties__ele:source,features__properties__operator
+﻿Id,Amenity,lon,lat,Type,Covered,Fuel,Tourism,Source,Fee,Designation,Access,Burners,Issues,Note,Description,Leisure,Name,Bin,Postcode,Suburb,Geometry,Elevation,MSL,Elevation Source,Operator
 node/246558936,bbq,144.9623043,-37.7851195,,,,,,,,,,,,,,,,,,,,,,
 node/246558937,bbq,144.9690736,-37.7856729,,,,,,,,,,,,,,,,,,,,,,
 node/265970689,bbq,145.2919197,-37.8898885,electric,,,,,,,,,,,,,,,,,,,,,
