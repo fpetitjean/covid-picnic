@@ -93,13 +93,14 @@ html, body{
         });
         $.ajax({
           type: "GET",
-          url: "https://data.melbourne.vic.gov.au/api/views/5nb5-w7hq/rows.csv",
+          url: "https://raw.githubusercontent.com/fpetitjean/covid-picnic/master/bbq_Melbourne.csv",
           dataType: "text",
           success: function(data) {
             processBBQData(data);
             //console.log(data);
           }
         });
+        
       });
 
 var mymap = L.map('map').setView([-37.814, 144.96332], 13);
@@ -378,6 +379,67 @@ var displayBBQ = true;
 
 // Comme il y a des virgule a l'interieur des champs, je rajoute 1 au header
 function processBBQData(data){
+  var allTextLines = data.split(/\r\n|\n/);
+  var headers = allTextLines[0].split(',');
+  // Dirty fix
+  var lines = [];
+
+  for (var i=1; i<allTextLines.length; i++) {
+    var data = allTextLines[i].split(',');
+    if (data.length == headers.length) {
+
+      var tarr = [];
+      tarr[0] = data[0];
+      tarr[1] = data[3];
+      tarr[2] = data[2];
+      var textBBQ = "";
+      for(var k=4; k<data.length; k++){
+        if(data[k] != ""){
+            textBBQ += headers[k]+": "+data[k]+", "
+        }
+      }
+      if(textBBQ != ""){
+        textBBQ = textBBQ.trim();
+        textBBQ = textBBQ.slice(0, -1);
+      }
+      else{
+        textBBQ = "No details"
+      }
+      tarr[0] = textBBQ;
+      lines.push(tarr);
+    }
+  }
+// console.log(headers);
+// console.log(lines);
+
+  for(var j=0; j<lines.length; j++)
+  {
+    var bbq = {};
+    bbq['Text'] = lines[j][0];
+    bbq['LatLong'] = L.latLng(lines[j][1], lines[j][2]);
+
+    
+    var bbqVisu = L.circleMarker(bbq['LatLong'], {
+      radius: 2.5,
+      color: 'brown',
+      weight:1,
+      fillColor: 'brown',
+      fillOpacity: 1
+    });
+    bbqVisu.bindPopup(bbq['Text']);
+    bbq['shape'] = bbqVisu;
+//bbqLayer.addLayer(bbqVisu);
+
+    bbqArray.push(bbq);
+
+
+  }
+  filterBBQ()
+//console.log(bbqArray);
+}
+
+// Comme il y a des virgule a l'interieur des champs, je rajoute 1 au header
+function processBBQDataCSV(data){
   var allTextLines = data.split(/\r\n|\n/);
   var headers = allTextLines[0].split(',');
   // Dirty fix
