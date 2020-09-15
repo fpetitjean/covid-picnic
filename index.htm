@@ -70,11 +70,10 @@ html, body{
       <button onclick="lookupAndDraw()" id="search">Search</button>
       <button onclick="MFZ.clearMe()">Reset</button>
       </p>
-      <!-- <p>
+      <p>
         <input type="checkbox" id="bbq" name="bbq" value="bbq" checked="true" onclick='changeBBQ(this);'>
-        <label for="vehicle1"> Display BBQ</label>
+        <label for="bbq"> Display BBQ</label>
         </p>
-      -->
     </div>
     <div id="results"></div>
 
@@ -92,7 +91,6 @@ html, body{
           if(e.keyCode==13)
             $('#search').click();
         });
-      /*
         $.ajax({
           type: "GET",
           url: "https://data.melbourne.vic.gov.au/api/views/5nb5-w7hq/rows.csv",
@@ -102,7 +100,6 @@ html, body{
             //console.log(data);
           }
         });
-      */
       });
 
 var mymap = L.map('map').setView([-37.814, 144.96332], 13);
@@ -254,7 +251,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     // Configure the handle
     configure_handle(text);
 
-    //filterBBQ();
+    filterBBQ();
   }
 
   /** Refresh the list of friends after changing the state */
@@ -277,7 +274,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
         myLayerGroup.removeLayer(obj.le_cercle);
         myLayerGroup.removeLayer(obj.la_handle);
         friends.delete(addressK);
-        // filterBBQ();
+        filterBBQ();
         refreshFriendsList();
       }, false);
       par.appendChild(button);
@@ -341,13 +338,18 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     mymap.closePopup();
     refreshFriendsList();
     document.getElementById('results').innerHTML = '';
-    // filterBBQ();
+    filterBBQ();
+  }
+
+  function getFriends(){
+    return friends;
   }
 
   // Return our function
   return {
     displayResults: displayResults,
-    clearMe: clearMe
+    clearMe: clearMe,
+    getFriends: getFriends
   };
 
 }();
@@ -364,7 +366,6 @@ function lookupAndDraw(){
 }
 
 
-/*
   //BBQ
 var bbqArray = [];
 var bbqLayer =  L.featureGroup([]).addTo(mymap);
@@ -422,25 +423,29 @@ function filterBBQ(){
   bbqLayer.clearLayers();
   if(displayBBQ){
     var bbqToDraw = [];
-    var countFriends = 0;
-    for (var key in friends){
-      var centerFriend = friends[key].getLatLng();
-      //console.log(friends[key]);
-      for(var i=0; i<bbqArray.length; i++){
+    let friends = MFZ.getFriends();
+    
+    for(var i=0; i<bbqArray.length; i++){
+      shouldDisplay = true;
+      latlong_bbq = bbqArray[i]['LatLong'];
+      for(const [key, obj] of friends ){
+        var centerFriend = obj.le_cercle.getLatLng();
+        //console.log(friends[key]);
+      
         //console.log(bbqArray[i]);
-        if(centerFriend.distanceTo(bbqArray[i]['LatLong']) < 5000){
+        if(centerFriend.distanceTo(latlong_bbq) > 5000){
+          shouldDisplay = false;
+          break;
           //console.log('got one');
-          if(!bbqToDraw.includes(bbqArray[i])){
-            bbqToDraw.push(bbqArray[i]);
-          }
+          
         }
       }
-      //console.log(centerFriend);
-      //console.log( key, friends[key] );
-      countFriends ++;
+      if(shouldDisplay){
+        bbqToDraw.push(bbqArray[i]);
+      }
     }
 
-    if(countFriends == 0){
+    if(bbqToDraw.length == 0){
       bbqToDraw = bbqArray;
     }
 
@@ -455,7 +460,7 @@ function changeBBQ(bbqCB){
   displayBBQ = bbqCB.checked;
   filterBBQ();
 }
-*/
+
     </script>
 
 
