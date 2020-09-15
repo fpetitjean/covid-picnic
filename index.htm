@@ -389,11 +389,10 @@ function processBBQData(data){
     if (data.length == headers.length) {
 
       var tarr = [];
-      tarr[0] = data[0];
-      tarr[1] = data[3];
-      tarr[2] = data[2];
+      tarr[1] = data[1];
+      tarr[2] = data[0];
       var textBBQ = "";
-      for(var k=4; k<data.length; k++){
+      for(var k=2; k<data.length; k++){
         if(data[k] != ""){
             textBBQ += headers[k]+": "+data[k]+", "
         }
