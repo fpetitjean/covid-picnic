@@ -68,12 +68,13 @@ html, body{
       <p>
       <input type="text" id="address"/>
       <button onclick="lookupAndDraw()" id="search">Search</button>
-      <button onclick="clearMe()">Reset</button>
+      <button onclick="MFZ.clearMe()">Reset</button>
       </p>
-      <p>
-      <input type="checkbox" id="bbq" name="bbq" value="bbq" checked="true" onclick='changeBBQ(this);'>
-      <label for="vehicle1"> Display BBQ</label>
-    </p>
+      <!-- <p>
+        <input type="checkbox" id="bbq" name="bbq" value="bbq" checked="true" onclick='changeBBQ(this);'>
+        <label for="vehicle1"> Display BBQ</label>
+        </p>
+      -->
     </div>
     <div id="results"></div>
 
@@ -91,15 +92,17 @@ html, body{
           if(e.keyCode==13)
             $('#search').click();
         });
+      /*
         $.ajax({
-        type: "GET",
-        url: "https://data.melbourne.vic.gov.au/api/views/5nb5-w7hq/rows.csv",
-        dataType: "text",
-        success: function(data) {
-          processBBQData(data);
-          //console.log(data);
-        }
-     });
+          type: "GET",
+          url: "https://data.melbourne.vic.gov.au/api/views/5nb5-w7hq/rows.csv",
+          dataType: "text",
+          success: function(data) {
+            processBBQData(data);
+            //console.log(data);
+          }
+        });
+      */
       });
 
 var mymap = L.map('map').setView([-37.814, 144.96332], 13);
@@ -120,304 +123,339 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
   zoomOffset: -1
 }).addTo(mymap);
 
-var popup = L.popup();
-var myLayerGroup=L.featureGroup([]).addTo(mymap); 
-var friends = {};
-var palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0'];
-
-var handleDict = {};
-var handleToCercle = new Map();
 
 
-// popup to explain how to move the circle
-var firstCircle = true;
-var popupExp = null;
+/** Create the Melbroune Friend Zone Module
+ * Input:
+ *   palette: colours list for circles
+ */
+MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
 
-//BBQ
-var bbqArray = [];
-var bbqLayer =  L.featureGroup([]).addTo(mymap);
-var displayBBQ = true;
+  // --- --- --- Private variables (not exported) --- --- --- //
+  /** Colours */
+  const handle_over_col = 'blue';
+  const handle_col = '#f03';
 
-function addCircle(lat,lon,id,text){
-  let circleColor = palette[Object.keys(friends).length%palette.length];
-  console.log(circleColor);
-  gps = [lat,lon];
-  le_cercle = L.circle(gps, {
-    radius: 5000,
-    color: 'blue',
-    weight:1,
-    fillColor: circleColor,
-    fillOpacity: 0.4
-  }
-  );
-  le_cercle.bindPopup(text);
-  myLayerGroup.addLayer(le_cercle);
-  friends[text] = le_cercle;
+  /** Track very first circle added by the user: explain how to move the circles */
+  let firstCircle = true;
+  let popupExp = null;
 
-  // Handle pour manipuler le cercle
-  var la_handle = L.circle(gps, {
-    radius: 50,
-    color: '#f03',
-    weight:1,
-    fillColor: '#f03',
-    fillOpacity: 1
-  }
-  );
-  myLayerGroup.addLayer(la_handle);
+  /** Dictionary address->l object{le_cercle:LObject, la_handle:LObject } */
+  let friends = new Map();
 
-  if(firstCircle){
-    placeFirstPopup(gps);
-    firstCircle = false;
+  /** Layer group to store the circles */
+  let myLayerGroup = L.featureGroup([]).addTo(mymap)
+
+
+  // --- --- --- Private functions (not exported) --- --- --- //
+
+  /** Update zoom according to the content of the layer group */
+  function rezoom(){
+    if(myLayerGroup.getLayers().length > 0){
+      mymap.fitBounds(myLayerGroup.getBounds());
+    }
   }
 
+  /** Display first popup giving a bit of explanation */
+  function display_first_popup(gps){
+    if(firstCircle){
+      firstCircle = false;
+      let screenPos = L.point(mymap.project(gps, mymap.getZoom()));
+      let popupScreenPos = screenPos.subtract(L.point(0, 10));
+      let popupPos = mymap.unproject(popupScreenPos, mymap.getZoom());
+      popupExp = L.popup()
+        .setLatLng(popupPos)
+        .setContent("Move me to adjust the position of the zone!")
+        .openOn(mymap);
+    }
+  }
 
-  handleDict[text] = la_handle;
-  handleToCercle.set(la_handle, le_cercle);
+  /** Configure la_handle */
+  function configure_handle(key) {
 
-  la_handle.on({
-    mousedown: function (e) {
+    let {la_handle:la_handle, le_cercle:le_cercle} = friends.get(key);
+
+    /** When pressing with the mouse */
+    function mdown(e){
       mymap.closePopup();
       mymap.dragging.disable();
-      mymap.on('mousemove', function(e) {
+      mymap.on('mousemove', e => {
         la_handle.setLatLng(e.latlng);
-        handleToCercle.get(la_handle).setLatLng(e.latlng);
-
-        //handleToCercle[]
+        le_cercle.setLatLng(e.latlng);
       });
-    },
-    mouseup: function (e) {
+    }
+
+    /** When releasing */
+    function mup(e){
       mymap.removeEventListener('mousemove');
       mymap.dragging.enable();
-    },
-    mouseover: function(e){
+    }
+
+    /** Change colour when hovering */
+    function mover(e){
       la_handle.setStyle({
-        color: 'blue',
-        fillColor: 'blue'
-      });
-    },
-    mouseout: function(e){
-      la_handle.setStyle({
-        color: '#f03',
-        fillColor: '#f03'
+        color: handle_over_col,
+        fillColor: handle_over_col
       });
     }
-  });
-  filterBBQ();
-  /* circleMarker = L.circleMarker(gps,{radius:2,weight:2});
-    myLayerGroup.addLayer(circleMarker); */
-}
 
-function placeFirstPopup(gps){
-  var screenPos = L.point(mymap.project(gps, mymap.getZoom()));
-  var popupScreenPos = screenPos.subtract(L.point(0, 10));
-  var popupPos = mymap.unproject(popupScreenPos, mymap.getZoom());
-
-  popupExp = L.popup()
-    .setLatLng(popupPos)
-    .setContent("Move me to adjust the position of the zone!")
-    .openOn(mymap);
-}
-
-
-// To Delete?
-function removeCircle(layer){
-  mymap.removeLayer(circle);
-}
-
-function removeHandle(layer){
-  var handleFound = null;
-  // On itere sur la Map des handle pour trouver celle qui correspond au cerle
-  for (let [key, value] of handleToCercle) {
-    if(layer == value){
-      handleFound = key;
+    /** Revert the style back when leaving the area */
+    function mout(e){
+      la_handle.setStyle({
+        color: handle_col,
+        fillColor: handle_col
+      });
     }
+
+    /** Create and return the properties */
+    la_handle.on({
+      mousedown:mdown,
+      mouseup: mup,
+      mouseover: mover,
+      mouseout: mout
+    });
   }
 
-  if(handleFound != null){
-    myLayerGroup.removeLayer(handleFound);
-    handleToCercle.delete(handleFound);
+  /** Add a circle on the map, with latitude, longitude, identifier and address text */
+  function addCircle(lat,lon,id,text){
+    // Get the next colour from the palette
+    let circleColor = palette[friends.size % palette.length];
+
+    // Leaf gps format
+    let gps = [lat, lon];
+
+    // Main circle
+    let le_cercle = L.circle(gps,{
+      radius: 5000,
+      color: 'blue',
+      weight:1,
+      fillColor: circleColor,
+      fillOpacity: 0.4
+    });
+
+    // Clickable handle to move the circle
+    let la_handle = L.circle(gps, {
+      radius: 50,
+      color: handle_col,
+      fillColor: handle_col,
+      fillOpacity: 1,
+      weight:1
+    });
+
+    // Adding information on the circle and storing infor
+    le_cercle.bindPopup(text);
+    myLayerGroup.addLayer(le_cercle);
+    myLayerGroup.addLayer(la_handle);
+    friends.set(text, {le_cercle: le_cercle, la_handle: la_handle});
+
+    // Display first popup
+    display_first_popup(gps);
+
+    // Configure the handle
+    configure_handle(text);
+
+    //filterBBQ();
   }
-}
 
-function clearMe(){
-  //remove all circles
-  myLayerGroup.clearLayers();
-  friends={};
-  handleDict = {};
-  refreshFriendsList();
-  document.getElementById('results').innerHTML = '';
-  filterBBQ();
-}
+  /** Refresh the list of friends after changing the state */
+  function refreshFriendsList(){
+    // Get the div en clear its content
+    let myFriendsDiv = document.getElementById('friends');
+    myFriendsDiv.innerHTML = '';
+    let br = document.createElement('br');
 
-function refreshFriendsList(){
-  let myFriendsDiv = document.getElementById('friends');
-  myFriendsDiv.innerHTML = '';
-  let br     = document.createElement('br');
+    // For each friends map:
+    for(const [addressK, obj] of friends ){
+      let par = document.createElement('p')
+      let address = document.createTextNode(addressK);
+      par.appendChild(address);
 
-  for (const [addressK, layer] of Object.entries(friends)) {
-    let span = document.createElement('p');
-    let address = document.createTextNode(addressK); 
-    span.appendChild(address);
+      let button = document.createElement('button');
+      let text = document.createTextNode("remove");
+      button.appendChild(text); 
+      button.addEventListener('click', function() {
+        myLayerGroup.removeLayer(obj.le_cercle);
+        myLayerGroup.removeLayer(obj.la_handle);
+        friends.delete(addressK);
+        // filterBBQ();
+        refreshFriendsList();
+      }, false);
+      par.appendChild(button);
+      myFriendsDiv.appendChild(par);
+      myFriendsDiv.appendChild(br);
+    }
+    rezoom();
+  }
 
-    let button = document.createElement('button');  
-    let text = document.createTextNode("remove"); 
-    button.appendChild(text); 
-    button.addEventListener('click', function() {
-      myLayerGroup.removeLayer(layer);
-      removeHandle(layer);
-      delete friends[addressK];
-      filterBBQ();  
+  /** Select an entry from the results. The entry is an object  */
+  function selectEntry(entry){
+    if(!friends.has(entry['display_name'])){
+      addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
       refreshFriendsList();
-    }, false);
-    span.appendChild(button);
-    myFriendsDiv.appendChild(span);
-    myFriendsDiv.appendChild(br);
+      document.getElementById('results').innerHTML = '';
+    }
   }
-  rezoom();
-}
 
-function rezoom(){
-  if(myLayerGroup.getLayers().length > 0){
-    mymap.fitBounds(myLayerGroup.getBounds());
+  // --- --- --- Public API (exported) --- --- --- //
+
+  function displayResults(data){
+    // console.log(data);
+
+    // Acces HTML
+    let myResultsDiv = document.getElementById('results');
+
+    // Clear previous results
+    myResultsDiv.innerHTML = '';
+
+    // Process input data: no result
+    if(data.length===0){
+      let par = document.createElement('p');
+      let address = document.createTextNode('No results');
+      par.appendChild(address);
+      myResultsDiv.appendChild(par);
+    } else {
+      // 'data' is an array of results: create a line with a "select" button per entry.
+      let br = document.createElement('br');
+      for(i=0; i<data.length ; i++){
+        let entry = data[i];
+        let par = document.createElement('p');
+        let address = document.createTextNode(entry['display_name']);
+        let button = document.createElement('button');
+        let text = document.createTextNode("select");
+
+        par.appendChild(address);
+        button.appendChild(text);
+        button.addEventListener('click', function(){ selectEntry(entry); }, false);
+        par.appendChild(button);
+        myResultsDiv.appendChild(par);
+        myResultsDiv.appendChild(br);
+      }
+    }
   }
-}
 
-function selectEntry(entry){
-  if(! (entry['display_name'] in friends) ){
-    addCircle(entry['lat'],entry['lon'],entry['place_id'],entry['display_name']);
-    //console.log(entry);
-    document.getElementById('results').innerHTML = '';
+  /** Clear all circles */
+  function clearMe(){
+    //remove all circles
+    myLayerGroup.clearLayers();
+    friends = new Map();
+    mymap.closePopup();
     refreshFriendsList();
-  }
-}
-
-function displayResults(data){
-  //console.log(data);
-  document.getElementById('results').innerHTML = '';
-  var myResultsDiv = document.getElementById('results');
-  var br     = document.createElement('br');
-
-  if(data.length==0){
-    var span = document.createElement('p');
-    var address = document.createTextNode('No results');
-    span.appendChild(address);
-    myResultsDiv.appendChild(span);
+    document.getElementById('results').innerHTML = '';
+    // filterBBQ();
   }
 
-  i = 0;
-  for(i = 0 ; i<data.length ; i++){
-    let entry = data[i];
-    var span = document.createElement('p');
-    var address = document.createTextNode(entry['display_name']); 
-    span.appendChild(address);
+  // Return our function
+  return {
+    displayResults: displayResults,
+    clearMe: clearMe
+  };
+
+}();
 
 
-    var button = document.createElement('button');  
-    var text = document.createTextNode("select"); 
-    button.appendChild(text); 
-    button.addEventListener('click', function() {
-      selectEntry(entry);
-    }, false);
-    span.appendChild(button);
-    myResultsDiv.appendChild(span);
-    myResultsDiv.appendChild(br);
-  }
-}
 
 function lookupAndDraw(){
   adresse = document.getElementById('address').value;
   /* console.log(document.getElementById('search').textContent);
-    console.log(adresse); */
+  console.log(adresse); */
   $.getJSON('https://nominatim.openstreetmap.org/search?format=json&limit=3&countrycodes=au&q=' + adresse, function(data) {
-    displayResults(data);
+    MFZ.displayResults(data);
   });
 }
 
+
+/*
+  //BBQ
+var bbqArray = [];
+var bbqLayer =  L.featureGroup([]).addTo(mymap);
+var displayBBQ = true;
+
 // Comme il y a des virgule a l'interieur des champs, je rajoute 1 au header
-  function processBBQData(data){
-    var allTextLines = data.split(/\r\n|\n/);
-      var headers = allTextLines[0].split(',');
-      // Dirty fix
-      headers.push("Coordinate2");
-      var lines = [];
+function processBBQData(data){
+  var allTextLines = data.split(/\r\n|\n/);
+  var headers = allTextLines[0].split(',');
+  // Dirty fix
+  headers.push("Coordinate2");
+  var lines = [];
 
-      for (var i=1; i<allTextLines.length; i++) {
-          var data = allTextLines[i].split(',');
-          if (data.length == headers.length) {
+  for (var i=1; i<allTextLines.length; i++) {
+    var data = allTextLines[i].split(',');
+    if (data.length == headers.length) {
 
-              var tarr = [];
-              tarr[0] = data[0];
-              tarr[1] = data[1].split('(')[1].trim();
-              tarr[2] = data[2].split(')')[0].trim();
-              lines.push(tarr);
-          }
-      }
-      // console.log(headers);
-      // console.log(lines);
+      var tarr = [];
+      tarr[0] = data[0];
+      tarr[1] = data[1].split('(')[1].trim();
+      tarr[2] = data[2].split(')')[0].trim();
+      lines.push(tarr);
+    }
+  }
+// console.log(headers);
+// console.log(lines);
 
-      for(var j=0; j<lines.length; j++)
-    {
-      var bbq = {};
-      bbq['Text'] = lines[j][0];
-      bbq['LatLong'] = L.latLng(lines[j][1], lines[j][2]);
-      
+  for(var j=0; j<lines.length; j++)
+  {
+    var bbq = {};
+    bbq['Text'] = lines[j][0];
+    bbq['LatLong'] = L.latLng(lines[j][1], lines[j][2]);
 
-      var bbqVisu = L.circle(bbq['LatLong'], {
+
+    var bbqVisu = L.circle(bbq['LatLong'], {
       radius: 50,
       color: 'brown',
       weight:1,
       fillColor: 'brown',
       fillOpacity: 1
-      });
-      bbqVisu.bindPopup(bbq['Text']);
-      bbq['shape'] = bbqVisu;
-      //bbqLayer.addLayer(bbqVisu);
+    });
+    bbqVisu.bindPopup(bbq['Text']);
+    bbq['shape'] = bbqVisu;
+//bbqLayer.addLayer(bbqVisu);
 
-      bbqArray.push(bbq);
+    bbqArray.push(bbq);
 
 
-    }
-    filterBBQ()
-    //console.log(bbqArray);
   }
+  filterBBQ()
+//console.log(bbqArray);
+}
 
-  function filterBBQ(){
-    bbqLayer.clearLayers();
-    if(displayBBQ){
-      var bbqToDraw = [];
-      var countFriends = 0;
-      for (var key in friends){
-        var centerFriend = friends[key].getLatLng();
-        //console.log(friends[key]);
-        for(var i=0; i<bbqArray.length; i++){
-          //console.log(bbqArray[i]);
-          if(centerFriend.distanceTo(bbqArray[i]['LatLong']) < 5000){
-            //console.log('got one');
-            if(!bbqToDraw.includes(bbqArray[i])){
-              bbqToDraw.push(bbqArray[i]);
-            }
+function filterBBQ(){
+  bbqLayer.clearLayers();
+  if(displayBBQ){
+    var bbqToDraw = [];
+    var countFriends = 0;
+    for (var key in friends){
+      var centerFriend = friends[key].getLatLng();
+      //console.log(friends[key]);
+      for(var i=0; i<bbqArray.length; i++){
+        //console.log(bbqArray[i]);
+        if(centerFriend.distanceTo(bbqArray[i]['LatLong']) < 5000){
+          //console.log('got one');
+          if(!bbqToDraw.includes(bbqArray[i])){
+            bbqToDraw.push(bbqArray[i]);
           }
         }
-        //console.log(centerFriend);
-          //console.log( key, friends[key] );
-          countFriends ++;
       }
+      //console.log(centerFriend);
+      //console.log( key, friends[key] );
+      countFriends ++;
+    }
 
-      if(countFriends == 0){
-        bbqToDraw = bbqArray;
-      }
+    if(countFriends == 0){
+      bbqToDraw = bbqArray;
+    }
 
-      for(var j=0; j<bbqToDraw.length; j++){
-        bbqLayer.addLayer(bbqToDraw[j]['shape']);
-      }
+    for(var j=0; j<bbqToDraw.length; j++){
+      bbqLayer.addLayer(bbqToDraw[j]['shape']);
     }
   }
+}
 
-  function changeBBQ(bbqCB){
-    //console.log('BBQ: '+bbqCB.checked);
-    displayBBQ = bbqCB.checked;
-    filterBBQ();
-  }
+function changeBBQ(bbqCB){
+  //console.log('BBQ: '+bbqCB.checked);
+  displayBBQ = bbqCB.checked;
+  filterBBQ();
+}
+*/
     </script>
 
 
