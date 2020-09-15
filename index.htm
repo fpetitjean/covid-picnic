@@ -93,7 +93,8 @@ html, body{
         });
         $.ajax({
           type: "GET",
-          url: "https://melbournefriendzone.com/bbq_Melbourne.csv",
+          //url: "https://melbournefriendzone.com/bbq_Melbourne.csv",
+          url: "https://raw.githubusercontent.com/fpetitjean/covid-picnic/master/bbq_Melbourne.csv",
           dataType: "text",
           success: function(data) {
             processMarkerFile(data,'bbq');
@@ -102,13 +103,13 @@ html, body{
 
         $.ajax({
           type: "GET",
-          url: "https://melbournefriendzone.com/playground.csv",
+          //url: "https://melbournefriendzone.com/playground.csv",
+          url: "https://raw.githubusercontent.com/fpetitjean/covid-picnic/master/playground.csv",
           dataType: "text",
           success: function(data) {
             processMarkerFile(data,'playground');
           }
         });
-        
       });
 
 var mymap = L.map('map').setView([-37.814, 144.96332], 13);
@@ -129,7 +130,7 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
   zoomOffset: -1
 }).addTo(mymap);
 
-
+var markersReady = {"bbq": false, "playground":false};
 
 /** Create the Melbroune Friend Zone Module
  * Input:
@@ -154,6 +155,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
   /** Layer group to store the circles */
   let myLayerGroup = L.featureGroup([]).addTo(mymap);
 
+  readURLVariable();
 
   // --- --- --- Private functions (not exported) --- --- --- //
 
@@ -274,7 +276,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     let myFriendsDiv = document.getElementById('friends');
     myFriendsDiv.innerHTML = '';
     let br = document.createElement('br');
-
+    let addressesURLVar = '';
     // For each friends map:
     for(const [uid, obj] of friends ){
       let par = document.createElement('p')
@@ -294,7 +296,23 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
       par.appendChild(button);
       myFriendsDiv.appendChild(par);
       myFriendsDiv.appendChild(br);
+
+      // Arnaud: Try to get a nice String for the address
+      addressesURLVar += obj.text.split(",")[0].split(' ').join('_')+"="+obj.le_cercle.getLatLng().lat+","+obj.le_cercle.getLatLng().lng+"&";
     }
+
+    addressesURLVar = addressesURLVar.slice(0, -1);
+
+    let parFin = document.createElement('p');
+    let buttonSave = document.createElement('button');
+    let textSave = document.createTextNode("Save");
+    buttonSave.appendChild(textSave);
+    buttonSave.addEventListener('click', function() {
+      let urlBasic = window.location.href.split('?')[0] + "?" + addressesURLVar;
+      console.log(urlBasic);
+    });
+    parFin.appendChild(buttonSave);
+    myFriendsDiv.appendChild(parFin);
     rezoom();
   }
 
@@ -305,6 +323,34 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
       refreshFriendsList();
       document.getElementById('results').innerHTML = '';
     }
+  }
+
+  function readURLVariable()
+  {
+    let adressesStr = window.location.search.substring(1);
+    if(adressesStr.trim() != ''){
+      console.log(adressesStr);
+      countId = 0;
+      let adresses = adressesStr.split("&");
+      if(adresses.length > 0){
+        for(let i=0; i<adresses.length; i++){
+          let address = adresses[i].split("=");
+          let name = address[0].split('_').join(' ');
+          let coordinate = address[1].split(",");
+          console.log(name);
+          console.log(coordinate);
+          place = {};
+          place['place_id'] = countId;
+          place['display_name'] = name;
+          place['lat'] = coordinate[0];
+          place['lon'] = coordinate[1];
+          selectEntry(place);
+          //entry['lat'],entry['lon'],entry['place_id'],entry['display_name']
+          countId ++;
+        }
+      }
+    }
+    
   }
 
   // --- --- --- Public API (exported) --- --- --- //
@@ -402,7 +448,10 @@ var markerStyles = {
       fillOpacity: 1
     }};
 var displayMarkers = {"bbq":true,"playground":true};
+
 var markerLayers = {"bbq":L.featureGroup([]).addTo(mymap),"playground":L.featureGroup([]).addTo(mymap)};
+
+
 
 // Comme il y a des virgule a l'interieur des champs, je rajoute 1 au header
 function processMarkerFile(data,typeStr){
@@ -414,6 +463,7 @@ function processMarkerFile(data,typeStr){
     let markerVisu = L.circleMarker(latlng, markerStyles[typeStr]);
     markerArrays[typeStr].push(markerVisu);
   }
+  markersReady[typeStr] = true;
   filterMarkers(typeStr);
 //console.log(bbqArray);
 }
@@ -424,34 +474,36 @@ function filterAllMarkers(){
 }
 
 function filterMarkers(typeStr){
-  layer = markerLayers[typeStr];
-  layer.clearLayers();
-  let markerArray = markerArrays[typeStr];
-  if(displayMarkers[typeStr]){
-    let markerToDraw = [];
-    let friends = MFZ.getFriends();
-    
-    for(var i=0; i<markerArray.length; i++){
-      shouldDisplay = true;
-      latlong = markerArray[i].getLatLng();
-      for(const [key, obj] of friends ){
-        var centerFriend = obj.le_cercle.getLatLng();
+  if(markersReady[typeStr]){
+    layer = markerLayers[typeStr];
+    layer.clearLayers();
+    let markerArray = markerArrays[typeStr];
+    if(displayMarkers[typeStr]){
+      let markerToDraw = [];
+      let friends = MFZ.getFriends();
+      
+      for(var i=0; i<markerArray.length; i++){
+        shouldDisplay = true;
+        latlong = markerArray[i].getLatLng();
+        for(const [key, obj] of friends ){
+          var centerFriend = obj.le_cercle.getLatLng();
 
-        if(centerFriend.distanceTo(latlong) > 5000){
-          shouldDisplay = false;
-          break;
+          if(centerFriend.distanceTo(latlong) > 5000){
+            shouldDisplay = false;
+            break;
+          }
+        }
+        if(shouldDisplay){
+          markerToDraw.push(markerArray[i]);
         }
       }
-      if(shouldDisplay){
-        markerToDraw.push(markerArray[i]);
-      }
-    }
 
-    if(markerToDraw.length == 0){
-      markerToDraw = markerArray;
-    }
-    for(var j=0; j<markerToDraw.length; j++){
-      layer.addLayer(markerToDraw[j]);
+      if(markerToDraw.length == 0){
+        markerToDraw = markerArray;
+      }
+      for(var j=0; j<markerToDraw.length; j++){
+        layer.addLayer(markerToDraw[j]);
+      }
     }
   }
 }
@@ -467,6 +519,10 @@ function changePlayground(pgCB){
   displayMarkers[str] = pgCB.checked;
   filterMarkers(str);
 }
+
+
+
+
 
     </script>
 
