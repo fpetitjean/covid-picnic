@@ -140,7 +140,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
   // --- --- --- Private variables (not exported) --- --- --- //
   /** Colours */
   const handle_over_col = 'blue';
-  const handle_col = '#f03';
+  const handle_col = 'white';
 
   /** Track very first circle added by the user: explain how to move the circles */
   let firstCircle = true;
@@ -246,7 +246,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
 
     // Clickable handle to move the circle
     let la_handle = L.circleMarker(gps, {
-      radius: 5,
+      radius: 7,
       color: 'black',
       fillColor: handle_col,
       fillOpacity: 1,
