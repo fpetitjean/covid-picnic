@@ -205,7 +205,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     /** Change colour when hovering */
     function mover(e){
       la_handle.setStyle({
-        color: handle_over_col,
+        color: 'black',
         fillColor: handle_over_col
       });
     }
@@ -213,7 +213,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     /** Revert the style back when leaving the area */
     function mout(e){
       la_handle.setStyle({
-        color: handle_col,
+        color: 'black',
         fillColor: handle_col
       });
     }
@@ -245,9 +245,9 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     });
 
     // Clickable handle to move the circle
-    let la_handle = L.circle(gps, {
-      radius: 50,
-      color: handle_col,
+    let la_handle = L.circleMarker(gps, {
+      radius: 5,
+      color: 'black',
       fillColor: handle_col,
       fillOpacity: 1,
       weight:1
