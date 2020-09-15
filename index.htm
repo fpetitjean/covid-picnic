@@ -140,8 +140,10 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
   /** Dictionary address->object{le_cercle:LObject, la_handle:LObject } */
   let friends = new Map();
 
+  let uid = 0;
+
   /** Layer group to store the circles */
-  let myLayerGroup = L.featureGroup([]).addTo(mymap)
+  let myLayerGroup = L.featureGroup([]).addTo(mymap);
 
 
   // --- --- --- Private functions (not exported) --- --- --- //
@@ -164,13 +166,15 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
         .setLatLng(popupPos)
         .setContent("Move me to adjust the position of the zone!")
         .openOn(mymap);
+    }else{
+      mymap.closePopup();
     }
   }
 
   /** Configure la_handle */
-  function configure_handle(key) {
+  function configure_handle(uid) {
 
-    let {la_handle:la_handle, le_cercle:le_cercle} = friends.get(key);
+    let {la_handle:la_handle, le_cercle:le_cercle, text:text} = friends.get(uid);
 
     /** When pressing with the mouse */
     function mdown(e){
@@ -186,6 +190,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     function mup(e){
       mymap.removeEventListener('mousemove');
       mymap.dragging.enable();
+      filterBBQ();
     }
 
     /** Change colour when hovering */
@@ -243,15 +248,15 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     le_cercle.bindPopup(text);
     myLayerGroup.addLayer(le_cercle);
     myLayerGroup.addLayer(la_handle);
-    friends.set(text, {le_cercle: le_cercle, la_handle: la_handle});
-
+    friends.set(uid, {le_cercle: le_cercle, la_handle: la_handle, text: text});
     // Display first popup
     display_first_popup(gps);
 
     // Configure the handle
-    configure_handle(text);
+    configure_handle(uid);
 
     filterBBQ();
+    ++uid;
   }
 
   /** Refresh the list of friends after changing the state */
@@ -262,9 +267,9 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     let br = document.createElement('br');
 
     // For each friends map:
-    for(const [addressK, obj] of friends ){
+    for(const [uid, obj] of friends ){
       let par = document.createElement('p')
-      let address = document.createTextNode(addressK);
+      let address = document.createTextNode(obj.text);
       par.appendChild(address);
 
       let button = document.createElement('button');
@@ -273,7 +278,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
       button.addEventListener('click', function() {
         myLayerGroup.removeLayer(obj.le_cercle);
         myLayerGroup.removeLayer(obj.la_handle);
-        friends.delete(addressK);
+        friends.delete(uid);
         filterBBQ();
         refreshFriendsList();
       }, false);
