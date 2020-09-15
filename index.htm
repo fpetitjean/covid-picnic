@@ -380,21 +380,22 @@ function lookupAndDraw(){
 }
 
 
-const bbqColor = '#fdc086';
-const pgColor = '#7fc97f';
-const three = function(){return 3;}();
+const bbqColor = '#ff7f00';
+const pgColor = '#4daf4a';
+
+const markerSize = function(){return 4;}();
   //BBQ
 var markerArrays = {"bbq":[],"playground":[]};
 var markerStyles = {
     "bbq":{
-      radius: three,
+      radius: markerSize,
       color: 'black',
       weight:1,
       fillColor: bbqColor,
       fillOpacity: 1
     }
     ,"playground":{
-      radius: three,
+      radius: markerSize,
       color: 'black',
       weight:1,
       fillColor: pgColor,
