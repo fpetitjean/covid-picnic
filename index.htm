@@ -64,16 +64,16 @@ html, body{
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <div class="searchdiv">
-      <p>Enter your address. Once you've got your circle, enter your friends. You will quickly find your Friend Zone!</p>
-      <p>
+      Enter your address. Once you've got your circle, enter your friends. You will quickly find your Friend Zone!
+      <br/>
       <input type="text" id="address"/>
       <button onclick="lookupAndDraw()" id="search">Search</button>
       <button onclick="MFZ.clearMe()">Reset</button>
-      </p>
-      <p>
         <input type="checkbox" id="bbq" name="bbq" value="bbq" checked="true" onclick='changeBBQ(this);'>
-        <label for="bbq"> Display BBQ</label>
-        </p>
+        <label for="bbq"> BBQs</label>
+        <input type="checkbox" id="playground" name="playground" value="playground" checked="true" onclick='changePlayground(this);'>
+        <label for="playground"> Playgrounds</label><br/>
+        <span style="font-size: small;"><a href="https://www.dhhs.vic.gov.au/coronavirus" target="_blank">Covid information</a></span>
     </div>
     <div id="results"></div>
 
@@ -96,8 +96,16 @@ html, body{
           url: "https://melbournefriendzone.com/bbq_Melbourne.csv",
           dataType: "text",
           success: function(data) {
-            processBBQData(data);
-            //console.log(data);
+            processMarkerFile(data,'bbq');
+          }
+        });
+
+        $.ajax({
+          type: "GET",
+          url: "https://melbournefriendzone.com/playground.csv",
+          dataType: "text",
+          success: function(data) {
+            processMarkerFile(data,'playground');
           }
         });
         
@@ -191,7 +199,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     function mup(e){
       mymap.removeEventListener('mousemove');
       mymap.dragging.enable();
-      filterBBQ();
+      filterAllMarkers();
     }
 
     /** Change colour when hovering */
@@ -256,7 +264,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     // Configure the handle
     configure_handle(uid);
 
-    filterBBQ();
+    filterAllMarkers();
     ++uid;
   }
 
@@ -280,7 +288,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
         myLayerGroup.removeLayer(obj.le_cercle);
         myLayerGroup.removeLayer(obj.la_handle);
         friends.delete(uid);
-        filterBBQ();
+        filterAllMarkers();
         refreshFriendsList();
       }, false);
       par.appendChild(button);
@@ -344,7 +352,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
     mymap.closePopup();
     refreshFriendsList();
     document.getElementById('results').innerHTML = '';
-    filterBBQ();
+    filterAllMarkers();
   }
 
   function getFriends(){
@@ -372,111 +380,91 @@ function lookupAndDraw(){
 }
 
 
+const bbqColor = '#fdc086';
+const pgColor = '#7fc97f';
+const three = function(){return 3;}();
   //BBQ
-var bbqArray = [];
-var bbqLayer =  L.featureGroup([]).addTo(mymap);
-var displayBBQ = true;
+var markerArrays = {"bbq":[],"playground":[]};
+var markerStyles = {
+    "bbq":{
+      radius: three,
+      color: 'black',
+      weight:1,
+      fillColor: bbqColor,
+      fillOpacity: 1
+    }
+    ,"playground":{
+      radius: three,
+      color: 'black',
+      weight:1,
+      fillColor: pgColor,
+      fillOpacity: 1
+    }};
+var displayMarkers = {"bbq":true,"playground":true};
+var markerLayers = {"bbq":L.featureGroup([]).addTo(mymap),"playground":L.featureGroup([]).addTo(mymap)};
 
 // Comme il y a des virgule a l'interieur des champs, je rajoute 1 au header
-function processBBQData(data){
-  var allTextLines = data.split(/\r\n|\n/);
-  var headers = allTextLines[0].split(',');
-  // Dirty fix
-  var lines = [];
+function processMarkerFile(data,typeStr){
+  let allTextLines = data.split(/\r\n|\n/);
 
-  for (var i=1; i<allTextLines.length; i++) {
-    var data = allTextLines[i].split(',');
-    if (data.length == headers.length) {
-
-      var tarr = [];
-      tarr[1] = data[1];
-      tarr[2] = data[0];
-      var textBBQ = "";
-      for(var k=2; k<data.length; k++){
-        if(data[k] != ""){
-            textBBQ += headers[k]+": "+data[k]+", "
-        }
-      }
-      if(textBBQ != ""){
-        textBBQ = textBBQ.trim();
-        textBBQ = textBBQ.slice(0, -1);
-      }
-      else{
-        textBBQ = "No details"
-      }
-      tarr[0] = textBBQ;
-      lines.push(tarr);
-    }
+  for(var i=1; i<allTextLines.length; i++) { //skip header
+    let lines = allTextLines[i].split(',');
+    let latlng = L.latLng(lines[1], lines[0]);
+    let markerVisu = L.circleMarker(latlng, markerStyles[typeStr]);
+    markerArrays[typeStr].push(markerVisu);
   }
-// console.log(headers);
-// console.log(lines);
-
-  for(var j=0; j<lines.length; j++)
-  {
-    var bbq = {};
-    bbq['Text'] = lines[j][0];
-    bbq['LatLong'] = L.latLng(lines[j][1], lines[j][2]);
-
-    
-    var bbqVisu = L.circleMarker(bbq['LatLong'], {
-      radius: 2.5,
-      color: 'brown',
-      weight:1,
-      fillColor: 'brown',
-      fillOpacity: 1
-    });
-    bbqVisu.bindPopup(bbq['Text']);
-    bbq['shape'] = bbqVisu;
-//bbqLayer.addLayer(bbqVisu);
-
-    bbqArray.push(bbq);
-
-
-  }
-  filterBBQ()
+  filterMarkers(typeStr);
 //console.log(bbqArray);
 }
 
-function filterBBQ(){
-  bbqLayer.clearLayers();
-  if(displayBBQ){
-    var bbqToDraw = [];
+function filterAllMarkers(){
+  filterMarkers('bbq');
+  filterMarkers('playground');
+}
+
+function filterMarkers(typeStr){
+  layer = markerLayers[typeStr];
+  layer.clearLayers();
+  let markerArray = markerArrays[typeStr];
+  if(displayMarkers[typeStr]){
+    let markerToDraw = [];
     let friends = MFZ.getFriends();
     
-    for(var i=0; i<bbqArray.length; i++){
+    for(var i=0; i<markerArray.length; i++){
       shouldDisplay = true;
-      latlong_bbq = bbqArray[i]['LatLong'];
+      latlong = markerArray[i].getLatLng();
       for(const [key, obj] of friends ){
         var centerFriend = obj.le_cercle.getLatLng();
-        //console.log(friends[key]);
-      
-        //console.log(bbqArray[i]);
-        if(centerFriend.distanceTo(latlong_bbq) > 5000){
+
+        if(centerFriend.distanceTo(latlong) > 5000){
           shouldDisplay = false;
           break;
-          //console.log('got one');
-          
         }
       }
       if(shouldDisplay){
-        bbqToDraw.push(bbqArray[i]);
+        markerToDraw.push(markerArray[i]);
       }
     }
 
-    if(bbqToDraw.length == 0){
-      bbqToDraw = bbqArray;
+    if(markerToDraw.length == 0){
+      markerToDraw = markerArray;
     }
-
-    for(var j=0; j<bbqToDraw.length; j++){
-      bbqLayer.addLayer(bbqToDraw[j]['shape']);
+    for(var j=0; j<markerToDraw.length; j++){
+      layer.addLayer(markerToDraw[j]);
     }
   }
 }
 
 function changeBBQ(bbqCB){
-  //console.log('BBQ: '+bbqCB.checked);
-  displayBBQ = bbqCB.checked;
-  filterBBQ();
+  let str = 'bbq';
+  displayMarkers[str] = bbqCB.checked;
+  filterMarkers(str);
+}
+
+function changePlayground(pgCB){
+  let str = 'playground';
+  displayMarkers[str] = pgCB.checked;
+  filterMarkers(str);
 }
 
     </script>
