@@ -93,8 +93,7 @@ html, body{
         });
         $.ajax({
           type: "GET",
-          //url: "https://melbournefriendzone.com/bbq_Melbourne.csv",
-          url: "https://raw.githubusercontent.com/fpetitjean/covid-picnic/master/bbq_Melbourne.csv",
+          url: "https://melbournefriendzone.com/bbq.csv",
           dataType: "text",
           success: function(data) {
             processMarkerFile(data,'bbq');
@@ -103,8 +102,7 @@ html, body{
 
         $.ajax({
           type: "GET",
-          //url: "https://melbournefriendzone.com/playground.csv",
-          url: "https://raw.githubusercontent.com/fpetitjean/covid-picnic/master/playground.csv",
+          url: "https://melbournefriendzone.com/playground.csv",
           dataType: "text",
           success: function(data) {
             processMarkerFile(data,'playground');
@@ -298,10 +296,10 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
       myFriendsDiv.appendChild(br);
 
       // Arnaud: Try to get a nice String for the address
-      addressesURLVar += obj.text.split(",")[0].split(' ').join('_')+"="+obj.le_cercle.getLatLng().lat+","+obj.le_cercle.getLatLng().lng+"&";
+      //addressesURLVar += obj.text.split(",")[0].split(' ').join('_')+"="+obj.le_cercle.getLatLng().lat+","+obj.le_cercle.getLatLng().lng+"&";
     }
 
-    addressesURLVar = addressesURLVar.slice(0, -1);
+    /*addressesURLVar = addressesURLVar.slice(0, -1);
 
     let parFin = document.createElement('p');
     let buttonSave = document.createElement('button');
@@ -312,7 +310,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
       console.log(urlBasic);
     });
     parFin.appendChild(buttonSave);
-    myFriendsDiv.appendChild(parFin);
+    myFriendsDiv.appendChild(parFin);*/
     rezoom();
   }
 
