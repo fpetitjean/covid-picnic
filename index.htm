@@ -72,6 +72,7 @@ html, body, #map {
     left: 0px;
     display: flex; 
     flex-direction: column;
+    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
   }
   #instruction{
     background: rgba(93, 188, 210, .8); /*rgb(93, 188, 210) */
@@ -188,6 +189,19 @@ html, body, #map {
         margin-top: 10px;
         
     }
+
+    .leaflet-verticalcenter {
+        position: absolute;
+        z-index: 1000;
+        pointer-events: none;
+        top: 16%; /* possible because the placeholder's parent is the map */
+        transform: translateY(-50%); /* using the CSS3 Transform technique */
+        padding-top: 10px;
+    }
+
+    .leaflet-verticalcenter .leaflet-control {
+        margin-bottom: 10px;
+    }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -284,6 +298,28 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
   tileSize: 512,
   zoomOffset: -1
 }).addTo(mymap);
+
+
+
+// Create additional Control placeholders
+function addControlPlaceholders(map) {
+    var corners = map._controlCorners,
+        l = 'leaflet-',
+        container = map._controlContainer;
+
+    function createCorner(vSide, hSide) {
+        var className = l + vSide + ' ' + l + hSide;
+
+        corners[vSide + hSide] = L.DomUtil.create('div', className, container);
+    }
+
+    createCorner('verticalcenter', 'left');
+    createCorner('verticalcenter', 'right');
+}
+addControlPlaceholders(mymap);
+
+// Change the position of the Zoom Control to a newly created placeholder.
+mymap.zoomControl.setPosition('verticalcenterleft');
 
 const bbqColor = '#ff7f00';
 const pgColor = '#4daf4a';
