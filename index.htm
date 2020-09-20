@@ -17,6 +17,7 @@ gtag('config', 'UA-44212575-5');
     </script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
     <style>
+      * { box-sizing: border-box; }
       body {
     padding: 0;
     margin: 0;
@@ -39,12 +40,13 @@ html, body, #map {
   }
   .searchdiv{
     position:fixed;
-    top:20px;
-    left: 70px;
+    top:0px;
+    /*left: 70px;*/
+    width: 100%;
     z-index:110;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+    /*border-radius: 10px;*/
+    background: rgba(230, 230, 230, 1);
+    /*box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);*/
     padding: 10px;
   }
   #results{
@@ -57,13 +59,62 @@ html, body, #map {
   }
   #friends{
     position:fixed;
-    bottom:20px;
-    left: 70px;
-    width:80%;
+    bottom:0px;
+    left: 0px;
+    width:100%;
     z-index:110;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
+    background: rgba(230, 230, 230, 1);
+    /*border-radius: 10px;*/
   }
+  .autocomplete {
+      /*the container must be positioned relative:*/
+      position: relative;
+      display: inline-block;
+    }
+    input {
+      border: 1px solid transparent;
+      background-color: #f1f1f1;
+      /*padding: 10px;*/
+      font-size: 16px;
+    }
+    input[type=text] {
+      background-color: #f1f1f1;
+      width: 100%;
+    }
+    button {
+      border: 1px solid transparent;
+      background-color: #f1f1f1;
+      /*padding: 10px;*/
+      font-size: 16px;
+      background-color: DodgerBlue;
+      color: #fff;
+    }
+    .autocomplete-items {
+      position: absolute;
+      border: 1px solid #d4d4d4;
+      border-bottom: none;
+      border-top: none;
+      z-index: 99;
+      /*position the autocomplete items to be the same width as the container:*/
+      top: 100%;
+      left: 0;
+      right: 0;
+    }
+    .autocomplete-items div {
+      /*padding: 10px;*/
+      cursor: pointer;
+      background-color: #fff;
+      border-bottom: 1px solid #d4d4d4;
+    }
+    .autocomplete-items div:hover {
+      /*when hovering an item:*/
+      background-color: #e9e9e9;
+    }
+    .autocomplete-active {
+      /*when navigating through the items using the arrow keys:*/
+      background-color: DodgerBlue !important;
+      color: #ffffff;
+    }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -77,7 +128,9 @@ html, body, #map {
     <div class="searchdiv">
       Enter your address. Once you've got your circle, enter your friends. You will quickly find your Friend Zone!
       <br/>
-      <input type="text" id="address"/>
+      <div class="autocomplete">
+        <input type="text" id="address"/>
+      </div>
       <button onclick="lookupAndDraw()" id="search">Search</button>
       <button onclick="MFZ.clearMe()">Reset</button>
         <input type="checkbox" id="bbq" name="bbq" value="bbq" checked="true" onclick='changeBBQ(this);'>
@@ -136,6 +189,9 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 }).addTo(mymap);
 
 var markersReady = {"bbq": false, "playground":false};
+
+var currentFocus;
+var inputField = document.getElementById("address");
 
 /** Create the Melbroune Friend Zone Module
  * Input:
@@ -360,6 +416,109 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
 
   // --- --- --- Public API (exported) --- --- --- //
 
+  
+
+
+  function displayResults2(arr){
+    //console.log(arr);
+    //console.log(inputField);
+    closeAllLists();
+    currentFocus = -1;
+    var divList, divItem;
+
+
+    /*create a DIV element that will contain the items (values):*/
+    divList = document.createElement("div");
+    divList.setAttribute("id", inputField.id + "autocomplete-list");
+    divList.setAttribute("class", "autocomplete-items");
+    /*append the DIV element as a child of the autocomplete container:*/
+    inputField.parentNode.appendChild(divList);
+    // console.log(inputField);
+    if(arr.length == 0){
+      divItem = document.createElement("DIV");
+      divItem.innerHTML = "No results";
+      divItem.innerHTML += "<input type='hidden' value='noResults'>";
+      divItem.addEventListener("click", function(e) {
+        closeAllLists();
+      });
+      divList.appendChild(divItem);
+    }
+    else{
+      for (i = 0; i < arr.length; i++) {
+        let entry = arr[i];
+        divItem = document.createElement("DIV");
+        divItem.innerHTML = entry['display_name'];
+        divItem.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+        divItem.addEventListener("click", function(e) {
+          //inputField.value = this.getElementsByTagName("input")[0].value;
+          selectEntry(entry);
+          closeAllLists();
+        });
+        divList.appendChild(divItem);
+          
+      }
+    }
+
+
+  }
+  function closeAllLists(elmnt){
+    inputField.value = "";
+    currentFocus = -1;
+    var x = document.getElementsByClassName("autocomplete-items");
+    for(var i=0; i<x.length; i++){
+      if (elmnt != x[i] && elmnt != inputField){
+        x[i].parentNode.removeChild(x[i]);  
+      }
+    }
+  }
+  document.addEventListener("keydown", function(e) {
+    var x = document.getElementById(inputField.id + "autocomplete-list");
+    if (x){ 
+      x = x.getElementsByTagName("div");
+    }
+    if (e.keyCode == 40) { // If Arrow Down
+      currentFocus++;
+      AddActive(x);
+    }
+    else if(e.keyCode == 38){ // If Arrow Up
+      currentFocus --;
+      AddActive(x);
+    }
+    else if(e.keyCode == 13){ // If Enter
+      console.log("Blop");
+      //
+      if(currentFocus > -1){
+        e.preventDefault();
+        if(x){
+          x[currentFocus].click();
+        }
+      }
+    }
+  });
+  function AddActive(x){
+    if(!x){
+      return false;
+    }
+
+    removeActive(x);
+
+    if(currentFocus >= x.length){
+      currentFocus = 0;
+    }
+    if(currentFocus < 0){
+      currentFocus = x.length - 1;
+    }
+
+    x[currentFocus].classList.add("autocomplete-active");
+  }
+
+  function removeActive(x){
+    for(var i = 0; i < x.length; i++){
+      x[i].classList.remove("autocomplete-active");
+    }
+  }
+
+
   function displayResults(data){
     // console.log(data);
 
@@ -413,6 +572,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
   // Return our function
   return {
     displayResults: displayResults,
+    displayResults2: displayResults2,
     clearMe: clearMe,
     getFriends: getFriends
   };
@@ -426,7 +586,7 @@ function lookupAndDraw(){
   /* console.log(document.getElementById('search').textContent);
   console.log(adresse); */
   $.getJSON('https://nominatim.openstreetmap.org/search?format=json&limit=3&countrycodes=au&q=' + adresse, function(data) {
-    MFZ.displayResults(data);
+    MFZ.displayResults2(data);
   });
 }
 
