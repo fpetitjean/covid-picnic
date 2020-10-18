@@ -244,7 +244,7 @@ MFZ = function(palette = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0']){
 
     // Main circle
     let le_cercle = L.circle(gps,{
-      radius: 5000,
+      radius: 25000,
       color: 'blue',
       weight:1,
       fillColor: circleColor,
@@ -493,7 +493,7 @@ function filterMarkers(typeStr){
         for(const [key, obj] of friends ){
           var centerFriend = obj.le_cercle.getLatLng();
 
-          if(centerFriend.distanceTo(latlong) > 5000){
+          if(centerFriend.distanceTo(latlong) > 25000){
             shouldDisplay = false;
             break;
           }
